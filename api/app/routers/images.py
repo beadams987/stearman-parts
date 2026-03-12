@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Annotated
 
 import pyodbc
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import RedirectResponse, StreamingResponse
 from pydantic import BaseModel
 

@@ -6,7 +6,7 @@ import logging
 from typing import Annotated, Any
 
 import pyodbc
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Query
 
 from app.auth import CurrentUser, optional_auth
 from app.config import Settings, get_settings
