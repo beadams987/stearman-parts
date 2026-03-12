@@ -282,6 +282,9 @@ def mdb_tables(lbc_path: Path) -> list[str]:
 
 def parse_csv(csv_text: str) -> list[dict]:
     """Parse CSV text into a list of dicts."""
+    # Increase field size limit to handle large hex-encoded BLOBs
+    # Default is 131072 (~128KB) but TIFF blobs can be 500KB+ when hex-encoded
+    csv.field_size_limit(sys.maxsize)
     reader = csv.DictReader(io.StringIO(csv_text))
     return list(reader)
 
@@ -741,11 +744,10 @@ def extract_images_metadata(lbc_path: Path, disc_num: int, logger: logging.Logge
     """
     Extract image metadata (without BLOBs) from a disc.
 
-    This exports the Images table WITHOUT the -b hex flag to get
-    metadata columns only. BLOB columns will appear as empty strings
-    in this mode.
+    Uses -b strip to omit binary BLOB data (Image and Thumbnail columns)
+    and return only the scalar metadata columns cleanly as UTF-8 text.
     """
-    csv_text = mdb_export_csv(lbc_path, "Images")
+    csv_text = mdb_export_csv(lbc_path, "Images", blob_mode="strip")
     rows = parse_csv(csv_text)
     logger.info("Disc %d: extracted metadata for %d images", disc_num, len(rows))
     return rows
@@ -809,6 +811,25 @@ def extract_image_blobs(
                 disc_num, source_id,
             )
             stats.errors.append(f"Disc {disc_num} ImageID {source_id}: hex decode failed")
+            continue
+
+        # Check if already staged (resume support)
+        # Quick check: if any file with this source_id exists in images_dir, skip re-extraction
+        existing_tif = images_dir / f"{source_id}.tif"
+        existing_jpg = images_dir / f"{source_id}.jpg"
+        if existing_tif.exists() or existing_jpg.exists():
+            existing_path = existing_tif if existing_tif.exists() else existing_jpg
+            existing_data = existing_path.read_bytes()
+            existing_thumb = thumbs_dir / f"{source_id}.jpg"
+            blob_info[source_id] = {
+                "image_path": str(existing_path),
+                "thumb_path": str(existing_thumb) if existing_thumb.exists() else None,
+                "sha256": compute_sha256(existing_data),
+                "width": None,
+                "height": None,
+                "file_size": len(existing_data),
+                "mime_type": detect_mime_type(existing_data),
+            }
             continue
 
         # Validate image data
@@ -989,12 +1010,12 @@ def process_disc(
             if is_service_manual:
                 service_manual_folder_id = new_folder_id
                 logger.info(
-                    "Disc %d: created SERVICE MANUAL folder (ID %d)",
+                    "Disc %d: created SERVICE MANUAL folder (ID %s)",
                     disc_num, new_folder_id,
                 )
             else:
                 logger.info(
-                    "Disc %d: created folder '%s' (ID %d)",
+                    "Disc %d: created folder '%s' (ID %s)",
                     disc_num, folder_name, new_folder_id,
                 )
 
@@ -1025,8 +1046,8 @@ def process_disc(
         notes = bundle_row.get("Notes", "").strip() or None
 
         # Resolve the new folder ID
-        new_folder_id = folder_id_map.get((disc_num, source_folder_id))
-        if new_folder_id is None:
+        folder_map_key = (disc_num, source_folder_id)
+        if folder_map_key not in folder_id_map:
             logger.warning(
                 "Disc %d, BundleID %d: references unmapped FolderID %d, skipping",
                 disc_num, source_bundle_id, source_folder_id,
@@ -1035,6 +1056,7 @@ def process_disc(
                 f"Disc {disc_num} BundleID {source_bundle_id}: unmapped folder {source_folder_id}"
             )
             continue
+        new_folder_id = folder_id_map[folder_map_key]
 
         new_bundle_id = sql.insert_bundle(
             folder_id=new_folder_id,
@@ -1077,8 +1099,8 @@ def process_disc(
         original_filename = meta.get("FileName", "").strip() or None
 
         # Resolve folder
-        new_folder_id = folder_id_map.get((disc_num, source_folder_id))
-        if new_folder_id is None:
+        img_folder_key = (disc_num, source_folder_id)
+        if img_folder_key not in folder_id_map:
             logger.warning(
                 "Disc %d, ImageID %d: references unmapped FolderID %d, skipping",
                 disc_num, source_image_id, source_folder_id,
@@ -1087,6 +1109,7 @@ def process_disc(
                 f"Disc {disc_num} ImageID {source_image_id}: unmapped folder {source_folder_id}"
             )
             continue
+        new_folder_id = folder_id_map[img_folder_key]
 
         # Resolve bundle (0 means standalone, no bundle)
         new_bundle_id = None
