@@ -66,7 +66,10 @@ export default function ImagePage() {
 
       {/* Image viewer with metadata */}
       <ImageViewer
-        imageUrl={image.image_url}
+        imageUrl={image.render_url
+          ? `${import.meta.env.VITE_API_URL || ''}${image.render_url}`
+          : image.image_url}
+        downloadUrl={image.image_url}
         dziUrl={image.dzi_url}
         fileName={image.file_name}
         metadata={{

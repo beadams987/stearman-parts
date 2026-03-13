@@ -176,6 +176,7 @@ async def get_image(
         drawing_numbers=drawing_numbers,
         keywords=keywords,
         image_url=blob_url,
+        render_url=f"/api/images/{image_id}/render",
         dzi_url=None,  # DZI not yet implemented
         notes=row.Notes,
         folder_name=folder_name,
@@ -184,6 +185,66 @@ async def get_image(
         source_disc=row.SourceDiscNumber,
         source_image_id=row.SourceImageID,
         created_at=row.CreatedAt,
+    )
+
+
+@router.get("/{image_id}/render")
+async def render_image(
+    image_id: int,
+    conn: Annotated[pyodbc.Connection, Depends(get_db)],
+    user: Annotated[CurrentUser | None, Depends(optional_auth)],
+    settings: Annotated[Settings, Depends(get_settings)],
+    quality: int = 85,
+    max_width: int | None = None,
+) -> StreamingResponse:
+    """Convert TIFF to JPEG for browser-inline viewing.
+
+    Fetches the original blob, converts via Pillow, and streams back JPEG.
+    Optional ``max_width`` parameter to limit output dimensions.
+    """
+    from io import BytesIO
+    from PIL import Image
+
+    cursor = conn.cursor()
+    cursor.execute("SELECT BlobPath, OriginalFileName FROM Images WHERE ImageID = ?", image_id)
+    row = cursor.fetchone()
+    if row is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Image not found.")
+    if not row.BlobPath:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Image blob not available.")
+
+    blob_svc = _get_blob_service(settings)
+    container_client = blob_svc._container_client
+    blob_client = container_client.get_blob_client(row.BlobPath)
+    download = blob_client.download_blob()
+    tiff_bytes = download.readall()
+
+    # Convert TIFF → JPEG
+    img = Image.open(BytesIO(tiff_bytes))
+
+    # Convert 1-bit/palette to RGB for JPEG output
+    if img.mode in ("1", "L", "P", "LA", "PA"):
+        img = img.convert("RGB")
+    elif img.mode == "RGBA":
+        img = img.convert("RGB")
+
+    # Optionally resize
+    if max_width and img.width > max_width:
+        ratio = max_width / img.width
+        new_size = (max_width, int(img.height * ratio))
+        img = img.resize(new_size, Image.LANCZOS)
+
+    out = BytesIO()
+    img.save(out, format="JPEG", quality=quality)
+    out.seek(0)
+
+    return StreamingResponse(
+        out,
+        media_type="image/jpeg",
+        headers={
+            "Cache-Control": "public, max-age=86400",
+            "Content-Disposition": f'inline; filename="{(row.OriginalFileName or "image").rsplit(".", 1)[0]}.jpg"',
+        },
     )
 
 

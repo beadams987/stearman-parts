@@ -11,6 +11,7 @@ import {
 
 interface ImageViewerProps {
   imageUrl: string;
+  downloadUrl?: string;
   dziUrl?: string | null;
   fileName?: string;
   metadata?: {
@@ -45,6 +46,7 @@ function ToolbarButton({
 
 export default function ImageViewer({
   imageUrl,
+  downloadUrl,
   dziUrl,
   fileName,
   metadata,
@@ -115,7 +117,7 @@ export default function ImageViewer({
 
   const handleDownload = useCallback(() => {
     const link = document.createElement('a');
-    link.href = imageUrl;
+    link.href = downloadUrl || imageUrl;
     link.download = fileName ?? 'image.tif';
     document.body.appendChild(link);
     link.click();

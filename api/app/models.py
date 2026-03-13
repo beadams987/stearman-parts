@@ -44,6 +44,7 @@ class FolderBreadcrumb(BaseModel):
 class ImageDetailResponse(ImageResponse):
     """Matches frontend ImageDetail interface."""
     image_url: str | None = None
+    render_url: str | None = None  # JPEG conversion endpoint for browser viewing
     dzi_url: str | None = None
     notes: str | None = None
     folder_name: str | None = None

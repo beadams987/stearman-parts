@@ -24,6 +24,7 @@ export interface Image {
 /** Full image detail including the full-resolution URL and metadata. */
 export interface ImageDetail extends Image {
   image_url: string;
+  render_url: string | null;
   dzi_url: string | null;
   notes: string | null;
   folder_name: string;
