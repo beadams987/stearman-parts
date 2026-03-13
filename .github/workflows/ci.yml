@@ -174,19 +174,27 @@ jobs:
           BLOB_URL=$(cat /tmp/blob_url.txt)
           echo "Uploaded to blob: $BLOB_NAME"
 
-          # Set WEBSITE_RUN_FROM_PACKAGE to the new blob URL via Kudu settings API
-          curl -sf -X POST \
-            "https://func-stearman-api.scm.azurewebsites.net/api/settings" \
-            -u '${{ secrets.AZURE_DEPLOY_USER }}:${{ secrets.AZURE_DEPLOY_PASS }}' \
+          # Update WEBSITE_RUN_FROM_PACKAGE via the app's deploy webhook
+          # (uses managed identity to update ARM settings directly)
+          HTTP_CODE=$(curl -sf -o /tmp/deploy_resp.json -w "%{http_code}" -X POST \
+            "https://func-stearman-api.azurewebsites.net/api/_deploy/update-package" \
             -H "Content-Type: application/json" \
-            -d "{\"WEBSITE_RUN_FROM_PACKAGE\":\"${BLOB_URL}\"}"
+            -H "X-Deploy-Key: ${{ secrets.DEPLOY_KEY }}" \
+            -d "{\"blob_url\":\"${BLOB_URL}\"}")
 
-          # Restart the app to pick up the new package
-          curl -sf -X POST \
-            "https://func-stearman-api.scm.azurewebsites.net/api/restart" \
-            -u '${{ secrets.AZURE_DEPLOY_USER }}:${{ secrets.AZURE_DEPLOY_PASS }}' || true
+          echo "Deploy webhook response: HTTP $HTTP_CODE"
+          cat /tmp/deploy_resp.json 2>/dev/null || true
 
-          echo "Deploy complete - app will restart with new package"
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "Warning: Deploy webhook failed, falling back to Kudu settings"
+            curl -sf -X POST \
+              "https://func-stearman-api.scm.azurewebsites.net/api/settings" \
+              -u '${{ secrets.AZURE_DEPLOY_USER }}:${{ secrets.AZURE_DEPLOY_PASS }}' \
+              -H "Content-Type: application/json" \
+              -d "{\"WEBSITE_RUN_FROM_PACKAGE\":\"${BLOB_URL}\"}"
+          fi
+
+          echo "Deploy complete"
         env:
           STORAGE_KEY: ${{ secrets.AZURE_STORAGE_KEY }}
           ACCOUNT: ststearmanimages

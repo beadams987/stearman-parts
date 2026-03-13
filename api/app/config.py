@@ -30,6 +30,12 @@ class Settings(BaseSettings):
     WORKOS_API_KEY: str = ""
     WORKOS_CLIENT_ID: str = ""
 
+    # Deploy webhook (for CI to update WEBSITE_RUN_FROM_PACKAGE via ARM)
+    DEPLOY_KEY: str = ""
+    AZURE_SUBSCRIPTION_ID: str = ""
+    AZURE_RESOURCE_GROUP: str = ""
+    AZURE_FUNCTION_APP_NAME: str = ""
+
     # CORS — defaults to * for production; override for stricter local dev
     CORS_ORIGINS: str = "*"
 
