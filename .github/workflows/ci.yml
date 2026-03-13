@@ -129,24 +129,66 @@ jobs:
           pip install -r api/requirements.txt \
             --target api/.python_packages/lib/site-packages
 
-      - name: Deploy via Kudu zip deploy
+      - name: Deploy via blob upload + WEBSITE_RUN_FROM_PACKAGE
         run: |
+          set -e
           cd api
           zip -rq /tmp/api-deploy.zip . \
             -x "__pycache__/*" \
             -x ".python_packages/lib/site-packages/*/__pycache__/*"
 
-          # Clear any stale WEBSITE_RUN_FROM_PACKAGE blob URL
+          # Upload zip to blob storage (function-releases container)
+          TIMESTAMP=$(date +%Y%m%d%H%M%S)
+          BLOB_NAME="${TIMESTAMP}-${GITHUB_SHA:0:8}.zip"
+          CONTAINER="function-releases"
+          ACCOUNT="ststearmanimages"
+
+          pip install -q azure-storage-blob 2>/dev/null
+          python3 -c "
+          import os
+          from datetime import datetime, timedelta, timezone
+          from azure.storage.blob import BlobServiceClient, generate_blob_sas, BlobSasPermissions
+          acct = os.environ['ACCOUNT']
+          key = os.environ['STORAGE_KEY']
+          cont = os.environ['CONTAINER']
+          blob_name = os.environ['BLOB_NAME']
+          conn = f'DefaultEndpointsProtocol=https;EndpointSuffix=core.windows.net;AccountName={acct};AccountKey={key}'
+          svc = BlobServiceClient.from_connection_string(conn)
+          cc = svc.get_container_client(cont)
+          try:
+              cc.create_container()
+          except Exception:
+              pass
+          blob = cc.get_blob_client(blob_name)
+          with open('/tmp/api-deploy.zip', 'rb') as f:
+              blob.upload_blob(f, overwrite=True)
+          sas = generate_blob_sas(account_name=acct, account_key=key, container_name=cont,
+              blob_name=blob_name, permission=BlobSasPermissions(read=True),
+              expiry=datetime.now(timezone.utc) + timedelta(days=3650))
+          url = f'https://{acct}.blob.core.windows.net/{cont}/{blob_name}?{sas}'
+          with open('/tmp/blob_url.txt', 'w') as f:
+              f.write(url)
+          print(f'Uploaded: {blob_name}')
+          "
+
+          BLOB_URL=$(cat /tmp/blob_url.txt)
+          echo "Uploaded to blob: $BLOB_NAME"
+
+          # Set WEBSITE_RUN_FROM_PACKAGE to the new blob URL via Kudu settings API
           curl -sf -X POST \
             "https://func-stearman-api.scm.azurewebsites.net/api/settings" \
             -u '${{ secrets.AZURE_DEPLOY_USER }}:${{ secrets.AZURE_DEPLOY_PASS }}' \
             -H "Content-Type: application/json" \
-            -d '{"WEBSITE_RUN_FROM_PACKAGE":"1"}' || true
+            -d "{\"WEBSITE_RUN_FROM_PACKAGE\":\"${BLOB_URL}\"}"
 
-          # Zip deploy
+          # Restart the app to pick up the new package
           curl -sf -X POST \
-            "https://func-stearman-api.scm.azurewebsites.net/api/zipdeploy" \
-            -u '${{ secrets.AZURE_DEPLOY_USER }}:${{ secrets.AZURE_DEPLOY_PASS }}' \
-            -H "Content-Type: application/zip" \
-            --data-binary @/tmp/api-deploy.zip \
-            -w "\nHTTP %{http_code}\n"
+            "https://func-stearman-api.scm.azurewebsites.net/api/restart" \
+            -u '${{ secrets.AZURE_DEPLOY_USER }}:${{ secrets.AZURE_DEPLOY_PASS }}' || true
+
+          echo "Deploy complete - app will restart with new package"
+        env:
+          STORAGE_KEY: ${{ secrets.AZURE_STORAGE_KEY }}
+          ACCOUNT: ststearmanimages
+          CONTAINER: function-releases
+          BLOB_NAME: ${{ github.sha }}.zip
