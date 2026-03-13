@@ -26,7 +26,7 @@ export interface Image {
 export interface ImageDetail extends Image {
   image_url: string;
   render_url: string | null;
-  dzi_url: string | null;
+
   notes: string | null;
   folder_name: string;
   folder_path: Folder[];

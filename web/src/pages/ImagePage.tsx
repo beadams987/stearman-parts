@@ -68,7 +68,6 @@ export default function ImagePage() {
       <ImageViewer
         imageUrl={image.render_url || image.image_url}
         downloadUrl={image.image_url}
-        dziUrl={image.dzi_url}
         fileName={image.file_name}
         metadata={{
           drawingNumbers: image.drawing_numbers,
