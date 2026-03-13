@@ -9,7 +9,11 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from app.auth import CurrentUser, optional_auth
 from app.database import get_db
-from app.models import FolderResponse, ImageResponse
+import math
+
+from app.config import Settings, get_settings
+from app.models import FolderResponse, ImageResponse, PaginatedResponse
+from app.services.blob_service import BlobService
 
 router = APIRouter(prefix="/api/folders", tags=["folders"])
 
@@ -89,21 +93,25 @@ async def get_folder(
     return _row_to_folder(row)
 
 
-@router.get("/{folder_id}/images", response_model=list[ImageResponse])
+@router.get("/{folder_id}/images")
 async def list_folder_images(
     folder_id: int,
     conn: Annotated[pyodbc.Connection, Depends(get_db)],
     _user: Annotated[CurrentUser | None, Depends(optional_auth)],
+    settings: Annotated[Settings, Depends(get_settings)],
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=50, ge=1, le=200),
-) -> list[ImageResponse]:
+) -> PaginatedResponse[ImageResponse]:
     """Return paginated images belonging to a folder."""
     cursor = conn.cursor()
+    thumbs_svc = BlobService(settings.AZURE_BLOB_CONNECTION_STRING, settings.BLOB_THUMBS_CONTAINER_NAME) if settings.AZURE_BLOB_CONNECTION_STRING else None
 
-    # Verify folder exists
-    cursor.execute("SELECT 1 FROM Folders WHERE FolderID = ?", folder_id)
-    if cursor.fetchone() is None:
+    # Verify folder exists and get total count
+    cursor.execute("SELECT COUNT(*) FROM Images WHERE FolderID = ?", folder_id)
+    count_row = cursor.fetchone()
+    if count_row is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Folder not found.")
+    total = count_row[0]
 
     offset = (page - 1) * page_size
     cursor.execute(
@@ -156,7 +164,7 @@ async def list_folder_images(
                 bundle_offset=img.BundleOffset,
                 image_position=img.ImagePosition,
                 file_name=img.OriginalFileName,
-                thumbnail_url=img.ThumbnailPath,
+                thumbnail_url=thumbs_svc.get_thumbnail_url(img.ThumbnailPath) if img.ThumbnailPath and thumbs_svc else img.ThumbnailPath,
                 width=img.ImageWidth,
                 height=img.ImageHeight,
                 drawing_numbers=drawing_numbers,
@@ -164,4 +172,10 @@ async def list_folder_images(
             )
         )
 
-    return results
+    return PaginatedResponse[ImageResponse](
+        items=results,
+        total=total,
+        page=page,
+        page_size=page_size,
+        total_pages=max(1, math.ceil(total / page_size)),
+    )
