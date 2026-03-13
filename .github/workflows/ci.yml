@@ -124,10 +124,10 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Install dependencies
+      - name: Install dependencies into package dir
         run: |
-          pip install -r api/requirements.txt
-          pip install azure-functions
+          pip install -r api/requirements.txt \
+            --target api/.python_packages/lib/site-packages
 
       - name: Deploy to Azure Functions
         uses: Azure/functions-action@v1
@@ -135,3 +135,4 @@ jobs:
           app-name: func-stearman-api
           package: api
           publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
+          scm-do-build-during-deployment: false

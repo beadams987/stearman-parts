@@ -56,3 +56,4 @@ staging/
 # Explicitly allow data/ (tracked via Git LFS)
 !data/
 !data/**
+api/.python_packages/
