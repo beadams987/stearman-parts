@@ -52,3 +52,7 @@ logs/
 
 # Staging data (migration)
 staging/
+
+# Explicitly allow data/ (tracked via Git LFS)
+!data/
+!data/**

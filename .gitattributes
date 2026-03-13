@@ -1,0 +1,4 @@
+data/source/*.lbc filter=lfs diff=lfs merge=lfs -text
+data/extracted/**/*.tif filter=lfs diff=lfs merge=lfs -text
+data/extracted/**/*.tiff filter=lfs diff=lfs merge=lfs -text
+data/extracted/**/*.jpg filter=lfs diff=lfs merge=lfs -text
