@@ -18,6 +18,7 @@ def _row_to_folder(row: pyodbc.Row) -> FolderResponse:
     return FolderResponse(
         id=row.FolderID,
         name=row.FolderName,
+        folder_name=row.FolderName,
         parent_id=row.ParentFolderID if row.ParentFolderID else None,
         children_count=getattr(row, "ChildrenCount", 0),
         image_count=getattr(row, "ImageCount", 0),

@@ -15,6 +15,7 @@ T = TypeVar("T")
 class FolderResponse(BaseModel):
     id: int
     name: str
+    folder_name: str | None = None
     parent_id: int | None = None
     children_count: int = 0
     image_count: int = 0
@@ -57,18 +58,28 @@ class BundleResponse(BaseModel):
 # ── Search ────────────────────────────────────────────────────────────
 
 class SearchResult(BaseModel):
+    """Search result matching the frontend SearchResult interface."""
     id: int | str
-    entity_type: str | None = None
-    title: str | None = None
-    drawing_number: str | None = None
-    keyword: str | None = None
-    folder_name: str | None = None
+    type: str = "image"  # 'image' | 'bundle'
+    file_name: str | None = None
     thumbnail_url: str | None = None
+    folder_name: str | None = None
+    folder_id: int | None = None
+    matched_field: str | None = None  # 'drawing_number' | 'keyword'
+    matched_value: str | None = None
+    drawing_numbers: list[str] = Field(default_factory=list)
+    keywords: list[str] = Field(default_factory=list)
+    bundle_id: int | None = None
+    page_count: int | None = None
 
 
 class SearchResponse(BaseModel):
+    """Search response matching the frontend SearchResponse interface."""
     results: list[SearchResult] = Field(default_factory=list)
-    total_count: int = 0
+    total: int = 0
+    page: int = 1
+    page_size: int = 50
+    total_pages: int = 1
     query: str = ""
 
 
