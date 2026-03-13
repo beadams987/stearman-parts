@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import OpenSeadragon from 'openseadragon';
 import {
   ZoomIn,
@@ -54,9 +54,10 @@ export default function ImageViewer({
 }: ImageViewerProps) {
   const viewerRef = useRef<HTMLDivElement>(null);
   const osdRef = useRef<OpenSeadragon.Viewer | null>(null);
+  const [osdFailed, setOsdFailed] = useState(false);
 
   useEffect(() => {
-    if (!viewerRef.current) return;
+    if (!viewerRef.current || osdFailed) return;
 
     const tileSource = dziUrl
       ? { type: 'image', url: dziUrl }
@@ -66,6 +67,7 @@ export default function ImageViewer({
       element: viewerRef.current,
       tileSources: tileSource,
       prefixUrl: '',
+      crossOriginPolicy: 'Anonymous',
       showNavigationControl: false,
       showNavigator: true,
       navigatorPosition: 'BOTTOM_RIGHT',
@@ -88,11 +90,17 @@ export default function ImageViewer({
 
     osdRef.current = viewer;
 
+    // Handle open failure — fall back to plain <img>
+    viewer.addHandler('open-failed', () => {
+      console.error('[OSD] Failed to open tile source:', imageUrl);
+      setOsdFailed(true);
+    });
+
     return () => {
       viewer.destroy();
       osdRef.current = null;
     };
-  }, [imageUrl, dziUrl]);
+  }, [imageUrl, dziUrl, osdFailed]);
 
   const handleZoomIn = useCallback(() => {
     osdRef.current?.viewport.zoomBy(1.5);
@@ -150,12 +158,24 @@ export default function ImageViewer({
           </ToolbarButton>
         </div>
 
-        {/* OSD container */}
-        <div
-          ref={viewerRef}
-          className="w-full h-full rounded-lg bg-slate-800 dark:bg-slate-950"
-          style={{ minHeight: '400px' }}
-        />
+        {/* OSD container or fallback image */}
+        {osdFailed ? (
+          <div className="w-full h-full rounded-lg bg-slate-800 dark:bg-slate-950 overflow-auto flex items-center justify-center"
+               style={{ minHeight: '400px' }}>
+            <img
+              src={imageUrl}
+              alt={fileName ?? 'Image'}
+              className="max-w-full max-h-full object-contain"
+              crossOrigin="anonymous"
+            />
+          </div>
+        ) : (
+          <div
+            ref={viewerRef}
+            className="w-full h-full rounded-lg bg-slate-800 dark:bg-slate-950"
+            style={{ minHeight: '400px' }}
+          />
+        )}
       </div>
 
       {/* Metadata panel */}
