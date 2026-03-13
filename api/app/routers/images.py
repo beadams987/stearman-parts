@@ -12,7 +12,7 @@ from pydantic import BaseModel
 from app.auth import CurrentUser, optional_auth, verify_token
 from app.config import Settings, get_settings
 from app.database import get_db
-from app.models import ImageDetailResponse
+from app.models import ImageDetailResponse, ImageResponse, FolderBreadcrumb
 from app.services.blob_service import BlobService
 
 router = APIRouter(prefix="/api/images", tags=["images"])
@@ -109,6 +109,53 @@ async def get_image(
         blob_svc = _get_blob_service(settings)
         blob_url = blob_svc.get_image_url(row.BlobPath)
 
+    # Build folder breadcrumb path
+    folder_path: list[FolderBreadcrumb] = []
+    current_folder_id = row.FolderID
+    while current_folder_id is not None:
+        cursor.execute(
+            "SELECT FolderID, FolderName, ParentFolderID FROM Folders WHERE FolderID = ?",
+            current_folder_id,
+        )
+        f = cursor.fetchone()
+        if f is None:
+            break
+        folder_path.insert(0, FolderBreadcrumb(id=f.FolderID, folder_name=f.FolderName))
+        current_folder_id = f.ParentFolderID
+
+    # Get folder name
+    folder_name = folder_path[-1].folder_name if folder_path else None
+
+    # Get related images from same folder (up to 12, excluding this image)
+    cursor.execute(
+        """
+        SELECT TOP 12 i.ImageID, i.FolderID, i.BundleID, i.BundleOffset,
+               i.ImagePosition, i.OriginalFileName, i.ThumbnailPath
+        FROM Images i
+        WHERE i.FolderID = ? AND i.ImageID != ?
+        ORDER BY ABS(i.ImagePosition - ?)
+        """,
+        row.FolderID,
+        image_id,
+        row.ImagePosition,
+    )
+    related_images: list[ImageResponse] = []
+    if settings.AZURE_BLOB_CONNECTION_STRING:
+        blob_svc_rel = _get_blob_service(settings)
+    for rel in cursor.fetchall():
+        rel_thumb = None
+        if rel.ThumbnailPath and settings.AZURE_BLOB_CONNECTION_STRING:
+            rel_thumb = blob_svc_rel.get_thumbnail_url(rel.ThumbnailPath)
+        related_images.append(ImageResponse(
+            id=rel.ImageID,
+            folder_id=rel.FolderID,
+            file_name=rel.OriginalFileName,
+            image_position=rel.ImagePosition,
+            bundle_id=rel.BundleID,
+            bundle_offset=rel.BundleOffset,
+            thumbnail_url=rel_thumb,
+        ))
+
     # Audit the view
     _log_audit(
         conn,
@@ -123,15 +170,17 @@ async def get_image(
         folder_id=row.FolderID,
         bundle_id=row.BundleID,
         bundle_offset=row.BundleOffset,
-        position=row.ImagePosition,
-        filename=row.OriginalFileName,
+        file_name=row.OriginalFileName,
+        image_position=row.ImagePosition,
         thumbnail_url=thumbnail_url,
-        width=row.ImageWidth,
-        height=row.ImageHeight,
         drawing_numbers=drawing_numbers,
         keywords=keywords,
-        blob_url=blob_url,
+        image_url=blob_url,
+        dzi_url=None,  # DZI not yet implemented
         notes=row.Notes,
+        folder_name=folder_name,
+        folder_path=folder_path,
+        related_images=related_images,
         source_disc=row.SourceDiscNumber,
         source_image_id=row.SourceImageID,
         created_at=row.CreatedAt,

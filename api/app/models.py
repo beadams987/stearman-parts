@@ -24,22 +24,31 @@ class FolderResponse(BaseModel):
 # ── Images ────────────────────────────────────────────────────────────
 
 class ImageResponse(BaseModel):
+    """Matches frontend Image interface."""
     id: int
     folder_id: int
+    file_name: str | None = None
+    image_position: int = 0
     bundle_id: int | None = None
     bundle_offset: int | None = None
-    position: int
-    filename: str | None = None
     thumbnail_url: str | None = None
-    width: int | None = None
-    height: int | None = None
     drawing_numbers: list[str] = Field(default_factory=list)
     keywords: list[str] = Field(default_factory=list)
 
 
+class FolderBreadcrumb(BaseModel):
+    id: int
+    folder_name: str
+
+
 class ImageDetailResponse(ImageResponse):
-    blob_url: str | None = None
+    """Matches frontend ImageDetail interface."""
+    image_url: str | None = None
+    dzi_url: str | None = None
     notes: str | None = None
+    folder_name: str | None = None
+    folder_path: list[FolderBreadcrumb] = Field(default_factory=list)
+    related_images: list[ImageResponse] = Field(default_factory=list)
     source_disc: int | None = None
     source_image_id: int | None = None
     created_at: datetime | None = None
