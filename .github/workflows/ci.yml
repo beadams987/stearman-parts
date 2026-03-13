@@ -174,6 +174,13 @@ jobs:
           BLOB_URL=$(cat /tmp/blob_url.txt)
           echo "Uploaded to blob: $BLOB_NAME"
 
+          # Set DEPLOY_COMMIT so health endpoint reports the current version
+          curl -s -X POST \
+            "https://func-stearman-api.scm.azurewebsites.net/api/settings" \
+            -u '${{ secrets.AZURE_DEPLOY_USER }}:${{ secrets.AZURE_DEPLOY_PASS }}' \
+            -H "Content-Type: application/json" \
+            -d "{\"DEPLOY_COMMIT\":\"${GITHUB_SHA}\"}" || true
+
           # Update WEBSITE_RUN_FROM_PACKAGE via the app's deploy webhook
           # (uses managed identity to update ARM settings directly)
           HTTP_CODE=$(curl -s -o /tmp/deploy_resp.json -w "%{http_code}" -X POST \
@@ -195,9 +202,27 @@ jobs:
               -d "{\"WEBSITE_RUN_FROM_PACKAGE\":\"${BLOB_URL}\"}" || true
           fi
 
-          echo "Deploy complete"
+          echo "Deploy complete, verifying..."
+
+          # Wait for app to restart with new package, then verify
+          EXPECTED_COMMIT="${GITHUB_SHA:0:7}"
+          for i in 1 2 3 4 5 6; do
+            sleep 10
+            HEALTH=$(curl -s "https://func-stearman-api.azurewebsites.net/api/health" 2>/dev/null || echo "{}")
+            LIVE_COMMIT=$(echo "$HEALTH" | python3 -c "import json,sys; print(json.load(sys.stdin).get('commit','')[:7])" 2>/dev/null || echo "")
+            echo "Attempt $i: commit=$LIVE_COMMIT (expected=$EXPECTED_COMMIT)"
+            if [ "$LIVE_COMMIT" = "$EXPECTED_COMMIT" ]; then
+              echo "✅ Deploy verified — API is running commit $LIVE_COMMIT"
+              exit 0
+            fi
+          done
+
+          echo "⚠️ Deploy uploaded but API hasn't picked up new code after 60s"
+          echo "   This may require a manual ARM settings update"
+          exit 1
         env:
           STORAGE_KEY: ${{ secrets.AZURE_STORAGE_KEY }}
           ACCOUNT: ststearmanimages
           CONTAINER: function-releases
           BLOB_NAME: ${{ github.sha }}.zip
+          DEPLOY_COMMIT: ${{ github.sha }}

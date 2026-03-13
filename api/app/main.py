@@ -38,10 +38,14 @@ app.include_router(deploy.router)
 
 # ── Health check ──────────────────────────────────────────────────────
 
-@app.get("/health", tags=["health"])
+@app.get("/api/health", tags=["health"])
 async def health_check() -> dict[str, str]:
-    """Simple liveness probe."""
-    return {"status": "ok"}
+    """Liveness probe with commit SHA for deploy verification."""
+    import os
+    return {
+        "status": "ok",
+        "commit": os.environ.get("DEPLOY_COMMIT", "unknown"),
+    }
 
 
 @app.get("/api/stats", tags=["stats"])
