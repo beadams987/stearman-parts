@@ -1,10 +1,11 @@
 /** Folder in the hierarchical navigation tree. */
 export interface Folder {
   id: number;
-  parent_folder_id: number | null;
+  parent_id: number | null;
   folder_name: string;
   notes: string | null;
   image_count: number;
+  children_count: number;
   children?: Folder[];
 }
 

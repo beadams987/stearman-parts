@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ChevronRight, Home } from 'lucide-react';
-import { useFolder, useFolderImages } from '../api/hooks.ts';
+import { ChevronRight, Home, Folder as FolderIcon } from 'lucide-react';
+import { useFolder, useFolders, useFolderImages } from '../api/hooks.ts';
 import ImageGrid from '../components/ImageGrid.tsx';
 
 export default function FolderPage() {
@@ -10,6 +10,7 @@ export default function FolderPage() {
   const [page, setPage] = useState(1);
 
   const { data: folder, isLoading: folderLoading } = useFolder(folderId);
+  const { data: subfolders } = useFolders(folderId);
   const { data: imageData, isLoading: imagesLoading } = useFolderImages(folderId, page);
 
   if (folderLoading) {
@@ -51,14 +52,44 @@ export default function FolderPage() {
           <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100">
             {folder?.folder_name ?? 'Loading...'}
           </h1>
-          {imageData && (
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-              {imageData.total} images
-              {imageData.total_pages > 1 && ` (page ${page} of ${imageData.total_pages})`}
-            </p>
-          )}
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            {subfolders && subfolders.length > 0 && `${subfolders.length} folders`}
+            {subfolders && subfolders.length > 0 && imageData && imageData.total > 0 && ' · '}
+            {imageData && imageData.total > 0 && (
+              <>
+                {imageData.total} images
+                {imageData.total_pages > 1 && ` (page ${page} of ${imageData.total_pages})`}
+              </>
+            )}
+          </p>
         </div>
       </div>
+
+      {/* Subfolders */}
+      {subfolders && subfolders.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+          {subfolders.map((sub) => (
+            <Link
+              key={sub.id}
+              to={`/folders/${sub.id}`}
+              className="flex items-center gap-3 p-4 bg-white dark:bg-slate-800 rounded-lg border border-slate-200
+                dark:border-slate-700 hover:shadow-md hover:border-blue-300 dark:hover:border-blue-600
+                transition-all duration-200 group"
+            >
+              <FolderIcon className="w-8 h-8 text-amber-500 dark:text-amber-400 flex-shrink-0
+                group-hover:text-amber-600 dark:group-hover:text-amber-300 transition-colors" />
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">
+                  {sub.folder_name}
+                </p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {sub.image_count} images
+                </p>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
 
       {/* Image grid */}
       {imagesLoading ? (
