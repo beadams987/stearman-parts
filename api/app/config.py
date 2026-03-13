@@ -15,8 +15,10 @@ class Settings(BaseSettings):
     AZURE_SQL_CONNECTION_STRING: str = ""
 
     # Azure Blob Storage
-    AZURE_STORAGE_CONNECTION_STRING: str = ""
-    AZURE_STORAGE_CONTAINER: str = "stearman-images"
+    # Function App has these set as AZURE_BLOB_CONNECTION_STRING / BLOB_CONTAINER_NAME
+    AZURE_BLOB_CONNECTION_STRING: str = ""
+    BLOB_CONTAINER_NAME: str = "images"
+    BLOB_THUMBS_CONTAINER_NAME: str = "thumbs"
 
     # Azure AI Search
     AZURE_SEARCH_ENDPOINT: str = ""
@@ -27,8 +29,8 @@ class Settings(BaseSettings):
     WORKOS_API_KEY: str = ""
     WORKOS_CLIENT_ID: str = ""
 
-    # CORS
-    CORS_ORIGINS: str = "http://localhost:5173"
+    # CORS — defaults to * for production; override for stricter local dev
+    CORS_ORIGINS: str = "*"
 
     model_config = {
         "env_file": ".env",
@@ -39,7 +41,10 @@ class Settings(BaseSettings):
     @property
     def cors_origins_list(self) -> list[str]:
         """Parse comma-separated CORS origins into a list."""
-        return [origin.strip() for origin in self.CORS_ORIGINS.split(",") if origin.strip()]
+        val = self.CORS_ORIGINS.strip()
+        if val == "*":
+            return ["*"]
+        return [origin.strip() for origin in val.split(",") if origin.strip()]
 
 
 @lru_cache

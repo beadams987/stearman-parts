@@ -23,7 +23,7 @@ class NotesUpdate(BaseModel):
 
 
 def _get_blob_service(settings: Settings) -> BlobService:
-    return BlobService(settings.AZURE_STORAGE_CONNECTION_STRING, settings.AZURE_STORAGE_CONTAINER)
+    return BlobService(settings.AZURE_BLOB_CONNECTION_STRING, settings.BLOB_CONTAINER_NAME)
 
 
 def _log_audit(
@@ -99,13 +99,13 @@ async def get_image(
 
     # Generate thumbnail URL if path exists
     thumbnail_url: str | None = None
-    if row.ThumbnailPath and settings.AZURE_STORAGE_CONNECTION_STRING:
+    if row.ThumbnailPath and settings.AZURE_BLOB_CONNECTION_STRING:
         blob_svc = _get_blob_service(settings)
         thumbnail_url = blob_svc.get_thumbnail_url(row.ThumbnailPath)
 
     # Generate full blob URL if path exists
     blob_url: str | None = None
-    if row.BlobPath and settings.AZURE_STORAGE_CONNECTION_STRING:
+    if row.BlobPath and settings.AZURE_BLOB_CONNECTION_STRING:
         blob_svc = _get_blob_service(settings)
         blob_url = blob_svc.get_image_url(row.BlobPath)
 
