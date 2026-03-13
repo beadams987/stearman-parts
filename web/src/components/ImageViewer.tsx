@@ -1,5 +1,4 @@
-import { useEffect, useRef, useCallback, useState } from 'react';
-import OpenSeadragon from 'openseadragon';
+import { useRef, useCallback, useState, useEffect } from 'react';
 import {
   ZoomIn,
   ZoomOut,
@@ -47,80 +46,48 @@ function ToolbarButton({
 export default function ImageViewer({
   imageUrl,
   downloadUrl,
-  dziUrl,
+  dziUrl: _dziUrl,
   fileName,
   metadata,
   showMetadata = true,
 }: ImageViewerProps) {
-  const viewerRef = useRef<HTMLDivElement>(null);
-  const osdRef = useRef<OpenSeadragon.Viewer | null>(null);
-  const [osdFailed, setOsdFailed] = useState(false);
-
-  useEffect(() => {
-    if (!viewerRef.current || osdFailed) return;
-
-    const tileSource = dziUrl
-      ? { type: 'image', url: dziUrl }
-      : { type: 'image' as const, url: imageUrl };
-
-    const viewer = OpenSeadragon({
-      element: viewerRef.current,
-      tileSources: tileSource,
-      prefixUrl: '',
-      crossOriginPolicy: 'Anonymous',
-      showNavigationControl: false,
-      showNavigator: true,
-      navigatorPosition: 'BOTTOM_RIGHT',
-      navigatorSizeRatio: 0.15,
-      minZoomLevel: 0.1,
-      maxZoomLevel: 20,
-      visibilityRatio: 0.5,
-      constrainDuringPan: false,
-      animationTime: 0.3,
-      gestureSettingsMouse: {
-        scrollToZoom: true,
-        clickToZoom: true,
-        dblClickToZoom: true,
-      },
-      gestureSettingsTouch: {
-        pinchToZoom: true,
-        flickEnabled: true,
-      },
-    });
-
-    osdRef.current = viewer;
-
-    // Handle open failure — fall back to plain <img>
-    viewer.addHandler('open-failed', () => {
-      console.error('[OSD] Failed to open tile source:', imageUrl);
-      setOsdFailed(true);
-    });
-
-    return () => {
-      viewer.destroy();
-      osdRef.current = null;
-    };
-  }, [imageUrl, dziUrl, osdFailed]);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
+  const [scale, setScale] = useState(1);
+  const [rotation, setRotation] = useState(0);
+  const [isFullScreen, setIsFullScreen] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   const handleZoomIn = useCallback(() => {
-    osdRef.current?.viewport.zoomBy(1.5);
+    setScale((s) => Math.min(s * 1.5, 20));
   }, []);
 
   const handleZoomOut = useCallback(() => {
-    osdRef.current?.viewport.zoomBy(0.67);
+    setScale((s) => Math.max(s / 1.5, 0.1));
   }, []);
 
   const handleFitToScreen = useCallback(() => {
-    osdRef.current?.viewport.goHome();
-  }, []);
-
-  const handleFullScreen = useCallback(() => {
-    osdRef.current?.setFullScreen(!osdRef.current.isFullPage());
+    setScale(1);
+    setPosition({ x: 0, y: 0 });
   }, []);
 
   const handleRotate = useCallback(() => {
-    const current = osdRef.current?.viewport.getRotation() ?? 0;
-    osdRef.current?.viewport.setRotation(current + 90);
+    setRotation((r) => (r + 90) % 360);
+  }, []);
+
+  const handleFullScreen = useCallback(() => {
+    if (!containerRef.current) return;
+    if (!document.fullscreenElement) {
+      containerRef.current.requestFullscreen();
+      setIsFullScreen(true);
+    } else {
+      document.exitFullscreen();
+      setIsFullScreen(false);
+    }
   }, []);
 
   const handleDownload = useCallback(() => {
@@ -130,12 +97,52 @@ export default function ImageViewer({
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  }, [imageUrl, fileName]);
+  }, [imageUrl, downloadUrl, fileName]);
+
+  // Mouse wheel zoom
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const handler = (e: WheelEvent) => {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? 0.85 : 1.18;
+      setScale((s) => Math.min(Math.max(s * delta, 0.1), 20));
+    };
+    el.addEventListener('wheel', handler, { passive: false });
+    return () => el.removeEventListener('wheel', handler);
+  }, []);
+
+  // Mouse drag to pan
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    if (scale <= 1) return;
+    setIsDragging(true);
+    setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
+  }, [scale, position]);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!isDragging) return;
+    setPosition({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
+  }, [isDragging, dragStart]);
+
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
+  // Fullscreen change listener
+  useEffect(() => {
+    const handler = () => setIsFullScreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', handler);
+    return () => document.removeEventListener('fullscreenchange', handler);
+  }, []);
 
   return (
     <div className="flex flex-col lg:flex-row gap-4 h-full">
       {/* Viewer area */}
-      <div className="flex-1 relative min-h-[400px] lg:min-h-[600px]">
+      <div
+        ref={containerRef}
+        className={`flex-1 relative ${isFullScreen ? 'bg-black' : ''}`}
+        style={{ minHeight: '400px' }}
+      >
         {/* Toolbar overlay */}
         <div className="absolute top-3 left-3 z-10 flex gap-1.5">
           <ToolbarButton onClick={handleZoomIn} title="Zoom in">
@@ -153,29 +160,61 @@ export default function ImageViewer({
           <ToolbarButton onClick={handleFullScreen} title="Full screen">
             <Maximize className="w-4 h-4" />
           </ToolbarButton>
-          <ToolbarButton onClick={handleDownload} title="Download">
+          <ToolbarButton onClick={handleDownload} title="Download original">
             <Download className="w-4 h-4" />
           </ToolbarButton>
         </div>
 
-        {/* OSD container or fallback image */}
-        {osdFailed ? (
-          <div className="w-full h-full rounded-lg bg-slate-800 dark:bg-slate-950 overflow-auto flex items-center justify-center"
-               style={{ minHeight: '400px' }}>
+        {/* Zoom level indicator */}
+        <div className="absolute top-3 right-3 z-10 px-2 py-1 rounded-md bg-slate-700/80 text-white text-xs backdrop-blur-sm">
+          {Math.round(scale * 100)}%
+        </div>
+
+        {/* Image container */}
+        <div
+          className="w-full h-full rounded-lg bg-slate-800 dark:bg-slate-950 overflow-hidden flex items-center justify-center"
+          style={{ minHeight: isFullScreen ? '100vh' : '500px', cursor: scale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default' }}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+        >
+          {loading && !error && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-white" />
+            </div>
+          )}
+          {error ? (
+            <div className="text-center text-slate-400 p-8">
+              <p className="text-lg mb-2">Failed to load image</p>
+              <button
+                onClick={handleDownload}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
+              >
+                Download Original
+              </button>
+            </div>
+          ) : (
             <img
+              ref={imgRef}
               src={imageUrl}
-              alt={fileName ?? 'Image'}
-              className="max-w-full max-h-full object-contain"
+              alt={fileName ?? 'Engineering drawing'}
               crossOrigin="anonymous"
+              onLoad={() => setLoading(false)}
+              onError={() => { setLoading(false); setError(true); }}
+              className="select-none"
+              draggable={false}
+              style={{
+                transform: `translate(${position.x}px, ${position.y}px) scale(${scale}) rotate(${rotation}deg)`,
+                transformOrigin: 'center center',
+                transition: isDragging ? 'none' : 'transform 0.2s ease-out',
+                maxWidth: scale <= 1 ? '100%' : 'none',
+                maxHeight: scale <= 1 ? '100%' : 'none',
+                objectFit: 'contain',
+              }}
             />
-          </div>
-        ) : (
-          <div
-            ref={viewerRef}
-            className="w-full h-full rounded-lg bg-slate-800 dark:bg-slate-950"
-            style={{ minHeight: '400px' }}
-          />
-        )}
+          )}
+        </div>
       </div>
 
       {/* Metadata panel */}
