@@ -129,31 +129,24 @@ jobs:
           pip install -r api/requirements.txt \
             --target api/.python_packages/lib/site-packages
 
-      - name: Clear stale WEBSITE_RUN_FROM_PACKAGE
+      - name: Deploy via Kudu zip deploy
         run: |
-          # functions-action@v1 sets this to a blob URL after deploy.
-          # If present on the NEXT run, the action refuses to zip-deploy.
-          # Use the publish profile credentials to clear it via Kudu API.
-          PUBLISH_PROFILE='${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}'
-          USER=$(echo "$PUBLISH_PROFILE" | grep -oP 'userName="\K[^"]+' | head -1)
-          PASS=$(echo "$PUBLISH_PROFILE" | grep -oP 'userPWD="\K[^"]+' | head -1)
-          curl -sf -X DELETE \
-            "https://func-stearman-api.scm.azurewebsites.net/api/settings" \
-            -u "$USER:$PASS" \
-            -H "Content-Type: application/json" \
-            -d '{"WEBSITE_RUN_FROM_PACKAGE":""}' || true
-          # Alternative: use the settings API to set it to "1" (local zip)
+          cd api
+          zip -rq /tmp/api-deploy.zip . \
+            -x "__pycache__/*" \
+            -x ".python_packages/lib/site-packages/*/__pycache__/*"
+
+          # Clear any stale WEBSITE_RUN_FROM_PACKAGE blob URL
           curl -sf -X POST \
             "https://func-stearman-api.scm.azurewebsites.net/api/settings" \
-            -u "$USER:$PASS" \
+            -u '${{ secrets.AZURE_DEPLOY_USER }}:${{ secrets.AZURE_DEPLOY_PASS }}' \
             -H "Content-Type: application/json" \
             -d '{"WEBSITE_RUN_FROM_PACKAGE":"1"}' || true
 
-      - name: Deploy to Azure Functions
-        uses: Azure/functions-action@v1
-        with:
-          app-name: func-stearman-api
-          package: api
-          publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
-          scm-do-build-during-deployment: false
-          enable-oryx-build: false
+          # Zip deploy
+          curl -sf -X POST \
+            "https://func-stearman-api.scm.azurewebsites.net/api/zipdeploy" \
+            -u '${{ secrets.AZURE_DEPLOY_USER }}:${{ secrets.AZURE_DEPLOY_PASS }}' \
+            -H "Content-Type: application/zip" \
+            --data-binary @/tmp/api-deploy.zip \
+            -w "\nHTTP %{http_code}\n"
