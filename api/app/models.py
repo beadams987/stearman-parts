@@ -32,6 +32,7 @@ class ImageResponse(BaseModel):
     bundle_id: int | None = None
     bundle_offset: int | None = None
     thumbnail_url: str | None = None
+    render_url: str | None = None
     drawing_numbers: list[str] = Field(default_factory=list)
     keywords: list[str] = Field(default_factory=list)
 
@@ -60,7 +61,12 @@ class ImageDetailResponse(ImageResponse):
 class BundleResponse(BaseModel):
     id: int
     folder_id: int
-    position: int
+    folder_name: str | None = None
+    position: int = 0
+    image_position: int = 0
+    notes: str | None = None
+    drawing_numbers: list[str] = Field(default_factory=list)
+    keywords: list[str] = Field(default_factory=list)
     page_count: int = 0
     pages: list[ImageResponse] = Field(default_factory=list)
 

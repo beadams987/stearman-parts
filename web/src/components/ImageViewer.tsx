@@ -11,7 +11,7 @@ import {
 interface ImageViewerProps {
   imageUrl: string;
   downloadUrl?: string;
-  dziUrl?: string | null;
+
   fileName?: string;
   metadata?: {
     drawingNumbers: string[];
@@ -46,7 +46,6 @@ function ToolbarButton({
 export default function ImageViewer({
   imageUrl,
   downloadUrl,
-  dziUrl: _dziUrl,
   fileName,
   metadata,
   showMetadata = true,

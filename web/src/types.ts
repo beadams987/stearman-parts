@@ -17,6 +17,7 @@ export interface Image {
   bundle_id: number | null;
   bundle_offset: number | null;
   thumbnail_url: string;
+  render_url: string | null;
   drawing_numbers: string[];
   keywords: string[];
 }

@@ -50,8 +50,8 @@ export default function BundleViewer({
   }
 
   const currentImage = pages[activePage];
-  // Construct a full image URL from the thumbnail URL pattern
-  const imageUrl = currentImage.thumbnail_url.replace('/thumbnails/', '/images/');
+  // Use the pre-rendered JPEG URL, falling back to thumbnail
+  const imageUrl = currentImage.render_url || currentImage.thumbnail_url;
 
   return (
     <div className="flex flex-col h-full gap-4">
