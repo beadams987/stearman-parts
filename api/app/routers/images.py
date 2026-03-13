@@ -26,6 +26,11 @@ def _get_blob_service(settings: Settings) -> BlobService:
     return BlobService(settings.AZURE_BLOB_CONNECTION_STRING, settings.BLOB_CONTAINER_NAME)
 
 
+def _get_thumbs_blob_service(settings: Settings) -> BlobService:
+    """Return a BlobService pointed at the thumbnails container."""
+    return BlobService(settings.AZURE_BLOB_CONNECTION_STRING, settings.BLOB_THUMBS_CONTAINER_NAME)
+
+
 def _get_renders_blob_service(settings: Settings) -> BlobService:
     """Return a BlobService pointed at the pre-rendered JPEGs container."""
     return BlobService(settings.AZURE_BLOB_CONNECTION_STRING, settings.BLOB_RENDERS_CONTAINER_NAME)
@@ -103,11 +108,11 @@ async def get_image(
     )
     keywords = [r.IndexValue for r in cursor.fetchall()]
 
-    # Generate thumbnail URL if path exists
+    # Generate thumbnail URL if path exists (thumbnails are in a separate container)
     thumbnail_url: str | None = None
-    if row.ThumbnailPath and settings.AZURE_BLOB_CONNECTION_STRING:
-        blob_svc = _get_blob_service(settings)
-        thumbnail_url = blob_svc.get_thumbnail_url(row.ThumbnailPath)
+    thumbs_svc = _get_thumbs_blob_service(settings) if settings.AZURE_BLOB_CONNECTION_STRING else None
+    if row.ThumbnailPath and thumbs_svc:
+        thumbnail_url = thumbs_svc.get_thumbnail_url(row.ThumbnailPath)
 
     # Generate full blob URL if path exists
     blob_url: str | None = None
@@ -156,12 +161,10 @@ async def get_image(
         row.ImagePosition,
     )
     related_images: list[ImageResponse] = []
-    if settings.AZURE_BLOB_CONNECTION_STRING:
-        blob_svc_rel = _get_blob_service(settings)
     for rel in cursor.fetchall():
         rel_thumb = None
-        if rel.ThumbnailPath and settings.AZURE_BLOB_CONNECTION_STRING:
-            rel_thumb = blob_svc_rel.get_thumbnail_url(rel.ThumbnailPath)
+        if rel.ThumbnailPath and thumbs_svc:
+            rel_thumb = thumbs_svc.get_thumbnail_url(rel.ThumbnailPath)
         related_images.append(ImageResponse(
             id=rel.ImageID,
             folder_id=rel.FolderID,
