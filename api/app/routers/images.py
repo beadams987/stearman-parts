@@ -26,6 +26,11 @@ def _get_blob_service(settings: Settings) -> BlobService:
     return BlobService(settings.AZURE_BLOB_CONNECTION_STRING, settings.BLOB_CONTAINER_NAME)
 
 
+def _get_renders_blob_service(settings: Settings) -> BlobService:
+    """Return a BlobService pointed at the pre-rendered JPEGs container."""
+    return BlobService(settings.AZURE_BLOB_CONNECTION_STRING, settings.BLOB_RENDERS_CONTAINER_NAME)
+
+
 def _log_audit(
     conn: pyodbc.Connection,
     *,
@@ -65,7 +70,8 @@ async def get_image(
         SELECT i.ImageID, i.FolderID, i.BundleID, i.BundleOffset,
                i.ImagePosition, i.OriginalFileName, i.ThumbnailPath,
                i.BlobPath, i.ImageWidth, i.ImageHeight,
-               i.Notes, i.SourceDiscNumber, i.SourceImageID, i.CreatedAt
+               i.Notes, i.SourceDiscNumber, i.SourceImageID, i.CreatedAt,
+               i.RenderPath
         FROM Images i
         WHERE i.ImageID = ?
         """,
@@ -108,6 +114,16 @@ async def get_image(
     if row.BlobPath and settings.AZURE_BLOB_CONNECTION_STRING:
         blob_svc = _get_blob_service(settings)
         blob_url = blob_svc.get_image_url(row.BlobPath)
+
+    # Generate render URL: prefer pre-rendered JPEG from renders container,
+    # fall back to the on-the-fly /render endpoint
+    render_url: str | None = None
+    render_path = getattr(row, "RenderPath", None)
+    if render_path and settings.AZURE_BLOB_CONNECTION_STRING:
+        renders_svc = _get_renders_blob_service(settings)
+        render_url = renders_svc.get_render_url(render_path)
+    else:
+        render_url = f"/api/images/{image_id}/render"
 
     # Build folder breadcrumb path
     folder_path: list[FolderBreadcrumb] = []
@@ -176,7 +192,7 @@ async def get_image(
         drawing_numbers=drawing_numbers,
         keywords=keywords,
         image_url=blob_url,
-        render_url=f"/api/images/{image_id}/render",
+        render_url=render_url,
         dzi_url=None,  # DZI not yet implemented
         notes=row.Notes,
         folder_name=folder_name,

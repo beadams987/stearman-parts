@@ -13,11 +13,19 @@ from app.auth import CurrentUser, optional_auth
 from app.config import Settings, get_settings
 from app.database import get_db
 from app.models import SearchResponse, SearchResult
+from app.services.blob_service import BlobService
 from app.services.search_service import SearchService
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/search", tags=["search"])
+
+
+def _get_thumbs_blob_service(settings: Settings) -> BlobService | None:
+    """Return a BlobService for the thumbnails container, or None if not configured."""
+    if not settings.AZURE_BLOB_CONNECTION_STRING:
+        return None
+    return BlobService(settings.AZURE_BLOB_CONNECTION_STRING, settings.BLOB_THUMBS_CONTAINER_NAME)
 
 
 def _get_search_service(settings: Settings) -> SearchService | None:
@@ -39,6 +47,7 @@ def _sql_fallback_search(
     folder_id: int | None = None,
     top: int = 50,
     skip: int = 0,
+    thumbs_svc: BlobService | None = None,
 ) -> dict[str, Any]:
     """Fall back to SQL LIKE when Azure AI Search is not configured."""
     cursor = conn.cursor()
@@ -96,11 +105,22 @@ def _sql_fallback_search(
         else:
             keywords.append(row.IndexValue)
 
+        # Generate SAS-signed thumbnail URL if possible; fall back to raw path
+        thumb_url: str | None = None
+        if row.ThumbnailPath:
+            if thumbs_svc is not None:
+                try:
+                    thumb_url = thumbs_svc.get_thumbnail_url(row.ThumbnailPath)
+                except Exception:
+                    thumb_url = row.ThumbnailPath
+            else:
+                thumb_url = row.ThumbnailPath
+
         results.append({
             "id": row.ImageID,
             "type": "image",
             "file_name": row.OriginalFileName,
-            "thumbnail_url": row.ThumbnailPath,
+            "thumbnail_url": thumb_url,
             "folder_name": row.FolderName,
             "folder_id": row.FolderID,
             "matched_field": matched_field,
@@ -129,6 +149,7 @@ async def search(
     skip = (page - 1) * page_size
 
     search_svc = _get_search_service(settings)
+    thumbs_svc = _get_thumbs_blob_service(settings)
 
     if search_svc is not None:
         try:
@@ -139,17 +160,28 @@ async def search(
                 top=page_size,
                 skip=skip,
             )
+            # Sign thumbnail URLs for AI Search results
+            if thumbs_svc is not None:
+                for r in data.get("results", []):
+                    raw = r.get("thumbnail_url")
+                    if raw:
+                        try:
+                            r["thumbnail_url"] = thumbs_svc.get_thumbnail_url(raw)
+                        except Exception:
+                            pass  # keep raw path if signing fails
         except Exception:
             logger.exception("Azure AI Search failed; falling back to SQL LIKE")
             data = _sql_fallback_search(
-                conn, q, index_type=type, folder_id=folder_id, top=page_size, skip=skip,
+                conn, q, index_type=type, folder_id=folder_id,
+                top=page_size, skip=skip, thumbs_svc=thumbs_svc,
             )
     else:
         data = _sql_fallback_search(
-            conn, q, index_type=type, folder_id=folder_id, top=page_size, skip=skip,
+            conn, q, index_type=type, folder_id=folder_id,
+            top=page_size, skip=skip, thumbs_svc=thumbs_svc,
         )
 
-    total = data["total_count"]
+    total = data.get("total_count", 0)
     total_pages = max(1, math.ceil(total / page_size))
 
     results = [SearchResult(**r) for r in data["results"]]

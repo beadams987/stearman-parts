@@ -58,6 +58,13 @@ class BlobService:
         """
         return self._generate_sas_url(blob_path, expiry_hours=1)
 
+    def get_render_url(self, blob_path: str) -> str:
+        """Return a time-limited SAS URL for a pre-rendered JPEG in the renders container.
+
+        The URL is valid for 1 hour and is suitable for direct browser display.
+        """
+        return self._generate_sas_url(blob_path, expiry_hours=1)
+
     def upload_blob(self, blob_path: str, data: bytes, content_type: str) -> str:
         """Upload binary data to a blob and return its URL.
 

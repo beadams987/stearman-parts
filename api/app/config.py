@@ -18,7 +18,8 @@ class Settings(BaseSettings):
     # Function App has these set as AZURE_BLOB_CONNECTION_STRING / BLOB_CONTAINER_NAME
     AZURE_BLOB_CONNECTION_STRING: str = ""
     BLOB_CONTAINER_NAME: str = "images"
-    BLOB_THUMBS_CONTAINER_NAME: str = "thumbs"
+    BLOB_THUMBS_CONTAINER_NAME: str = "thumbnails"
+    BLOB_RENDERS_CONTAINER_NAME: str = "renders"
 
     # Azure AI Search
     AZURE_SEARCH_ENDPOINT: str = ""
