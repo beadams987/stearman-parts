@@ -15,6 +15,7 @@ router = APIRouter(prefix="/api/_deploy", tags=["deploy"])
 
 class DeployRequest(BaseModel):
     blob_url: str
+    commit: str | None = None
 
 
 @router.post("/update-package")
@@ -32,18 +33,26 @@ async def update_package(
         raise HTTPException(status_code=403, detail="Invalid deploy key")
 
     # Get managed identity token for ARM
+    # Azure Functions uses IDENTITY_ENDPOINT + IDENTITY_HEADER (not IMDS)
+    import os
+    identity_endpoint = os.environ.get("IDENTITY_ENDPOINT")
+    identity_header = os.environ.get("IDENTITY_HEADER")
+
+    if not identity_endpoint or not identity_header:
+        raise HTTPException(status_code=503, detail="Managed identity not available (IDENTITY_ENDPOINT not set)")
+
     async with httpx.AsyncClient() as client:
         token_resp = await client.get(
-            "http://169.254.169.254/metadata/identity/oauth2/token",
+            identity_endpoint,
             params={
                 "api-version": "2019-08-01",
                 "resource": "https://management.azure.com/",
             },
-            headers={"Metadata": "true"},
+            headers={"X-IDENTITY-HEADER": identity_header},
             timeout=10,
         )
         if token_resp.status_code != 200:
-            raise HTTPException(status_code=502, detail=f"Failed to get managed identity token: {token_resp.text}")
+            raise HTTPException(status_code=502, detail=f"Failed to get managed identity token: {token_resp.status_code}")
         token = token_resp.json()["access_token"]
 
     # Update app settings via ARM REST API
@@ -69,6 +78,8 @@ async def update_package(
 
         current_settings = list_resp.json().get("properties", {})
         current_settings["WEBSITE_RUN_FROM_PACKAGE"] = req.blob_url
+        if req.commit:
+            current_settings["DEPLOY_COMMIT"] = req.commit
 
         # PUT updated settings
         put_url = (
