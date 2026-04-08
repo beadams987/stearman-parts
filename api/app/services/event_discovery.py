@@ -18,11 +18,20 @@ import pyodbc
 log = logging.getLogger(__name__)
 
 SEARCH_QUERIES = [
-    "upcoming Stearman biplane airshow fly-in events 2026 2027",
-    "Boeing Kaydet PT-17 formation flight event schedule",
-    "Stearman Restorers Association annual fly-in dates",
-    "vintage warbird airshow featuring Stearman biplane",
-    "Stearman biplane museum exhibit event worldwide",
+    "Stearman biplane airshow fly-in events 2026 2027 upcoming schedule",
+    "Boeing Kaydet PT-17 formation flight event 2026 2027",
+    "Stearman Restorers Association annual fly-in 2026 2027",
+    "vintage warbird airshow featuring Stearman biplane 2026 2027",
+    "Stearman biplane museum exhibit event worldwide 2026 2027",
+    "airshow schedule 2026 2027 Stearman Kaydet confirmed aircraft",
+    "EAA fly-in warbird event Stearman PT-17 N2S biplane",
+    "Stearman biplane rides event open cockpit 2026 2027",
+    "AOPA fly-in regional airshow biplane Stearman Kaydet",
+    "vintage aircraft airshow Stearman Kaydet PT-13 PT-18 2026 2027",
+    "Reno air races warbird Stearman 2026",
+    "Reading airshow Mid-Atlantic warbird Stearman 2026 2027",
+    "Wings Over airshow Stearman biplane 2026 2027",
+    "Commemorative Air Force Stearman event ride 2026 2027",
 ]
 
 EXTRACT_PROMPT = """Based on the search results, extract ALL upcoming events featuring Boeing-Stearman (Kaydet, PT-13, PT-17, PT-18, N2S) aircraft.

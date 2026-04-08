@@ -31,6 +31,7 @@ class Event(BaseModel):
     featured_aircraft: list[str] = Field(default_factory=list)
     image_url: str = ""
     status: str = "upcoming"  # upcoming, ongoing, past, cancelled
+    date_estimated: bool = False
 
 
 class EventsResponse(BaseModel):
@@ -98,7 +99,7 @@ async def list_events(
     cursor.execute(f"""
         SELECT EventID, Title, Description, EventType, StartDate, EndDate,
                Location, City, StateProvince, Country, Venue, EventURL,
-               Source, AiSummary, FeaturedAircraft, ImageURL, Status
+               Source, AiSummary, FeaturedAircraft, ImageURL, Status, DateEstimated
         FROM Events e
         WHERE {where}
         ORDER BY e.StartDate ASC
@@ -133,6 +134,7 @@ async def list_events(
             featured_aircraft=aircraft,
             image_url=row.ImageURL or "",
             status=row.Status or "upcoming",
+            date_estimated=bool(row.DateEstimated) if row.DateEstimated is not None else False,
         ))
 
     return EventsResponse(events=events, total=total)

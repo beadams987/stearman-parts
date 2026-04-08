@@ -23,6 +23,7 @@ interface Event {
   featured_aircraft: string[];
   image_url: string;
   status: string;
+  date_estimated: boolean;
 }
 
 interface EventsResponse {
@@ -209,6 +210,9 @@ export default function EventsPage() {
                           <span className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
                             <Clock className="w-3 h-3" />
                             {formatDateRange(event.start_date, event.end_date)}
+                            {event.date_estimated && (
+                              <span className="text-[9px] px-1 py-0.5 bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 rounded">est.</span>
+                            )}
                           </span>
                         </div>
                       </div>
