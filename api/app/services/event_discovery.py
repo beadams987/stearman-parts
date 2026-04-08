@@ -8,11 +8,10 @@ from __future__ import annotations
 
 import json
 import logging
-import os
 import re
 import time
 import urllib.request
-from datetime import datetime, timezone
+from datetime import datetime
 
 import pyodbc
 
