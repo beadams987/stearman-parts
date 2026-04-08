@@ -83,7 +83,7 @@ export default function HomePage() {
           description="Engineering drawings & frame diagrams"
           color="bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
           hoverBorder="hover:border-blue-300 dark:hover:border-blue-600"
-          onClick={() => navigate('/folders/1')}
+          onClick={() => { const firstFolder = folders?.[0]; if (firstFolder) navigate(`/folders/${firstFolder.id}`); else navigate('/search'); }}
         />
         <QuickCard
           icon={BookOpen}
