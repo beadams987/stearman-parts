@@ -60,9 +60,10 @@ VISION_PROMPT = """Analyze this Boeing-Stearman biplane engineering drawing. Pro
 
 Format as structured text, not markdown. Be thorough but concise."""
 
-# Rate limiting for Gemini free tier
-REQUESTS_PER_MINUTE = 14  # Stay under 15 RPM
-REQUEST_INTERVAL = 60.0 / REQUESTS_PER_MINUTE
+# Rate limiting — Tier 1 paid allows 300 RPM for flash-lite
+# We use 200 RPM to leave headroom and be a good citizen
+REQUESTS_PER_MINUTE = 200
+REQUEST_INTERVAL = 60.0 / REQUESTS_PER_MINUTE  # ~0.3s between requests
 
 
 def load_checkpoint() -> dict:
