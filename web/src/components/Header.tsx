@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@workos-inc/authkit-react';
-import { Moon, Sun, Menu, LogOut, LogIn, UserPlus, Home, FolderOpen, BookOpen, Upload, Search, PanelLeft } from 'lucide-react';
+import { Moon, Sun, Menu, LogOut, LogIn, UserPlus, Home, FolderOpen, BookOpen, Upload, Search, PanelLeft, Calendar } from 'lucide-react';
 import SearchBar from './SearchBar.tsx';
 
 interface HeaderProps {
@@ -16,6 +16,7 @@ const desktopNavItems = [
   { to: '/', icon: Home, label: 'Home' },
   { to: '/folders/1', icon: FolderOpen, label: 'Drawings', matchPrefix: '/folders' },
   { to: '/manuals', icon: BookOpen, label: 'Manuals' },
+  { to: '/events', icon: Calendar, label: 'Events' },
   { to: '/submit', icon: Upload, label: 'Submit' },
   { to: '/search?q=', icon: Search, label: 'Search', matchPrefix: '/search' },
 ];

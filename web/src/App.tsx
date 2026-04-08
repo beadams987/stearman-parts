@@ -13,6 +13,7 @@ import BundlePage from './pages/BundlePage.tsx';
 import SearchPage from './pages/SearchPage.tsx';
 import ManualsPage from './pages/ManualsPage.tsx';
 import SubmitPage from './pages/SubmitPage.tsx';
+import EventsPage from './pages/EventsPage.tsx';
 
 function useDarkMode() {
   const [darkMode, setDarkMode] = useState(() => {
@@ -131,6 +132,7 @@ export default function App() {
             <Route path="/search" element={<SearchPage />} />
             <Route path="/manuals" element={<ManualsPage />} />
             <Route path="/submit" element={<SubmitPage />} />
+            <Route path="/events" element={<EventsPage />} />
           </Routes>
         </main>
       </div>
