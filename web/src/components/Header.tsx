@@ -63,7 +63,7 @@ export default function Header({ darkMode, onToggleDarkMode, onToggleSidebar }: 
               text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 no-underline"
           >
             <BookOpen className="w-4 h-4" />
-            Manuals
+            Manuals Library
           </Link>
           <Link
             to="/submit"
