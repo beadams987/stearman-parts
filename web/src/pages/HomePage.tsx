@@ -130,6 +130,7 @@ interface RegistryPreview {
   owner_name: string;
   city: string;
   state: string;
+  cert_date: string;
 }
 
 function RecentOwners() {
@@ -138,7 +139,7 @@ function RecentOwners() {
 
   useEffect(() => {
     apiClient
-      .get<{ entries: RegistryPreview[] }>('/registry', { params: { page_size: 6 } })
+      .get<{ entries: RegistryPreview[] }>('/registry', { params: { page_size: 6, sort: 'recent' } })
       .then((res) => {
         const d = res.data as { entries: RegistryPreview[] };
         setOwners(d.entries.slice(0, 6));
@@ -153,7 +154,7 @@ function RecentOwners() {
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-2">
           <Plane className="w-5 h-5 text-emerald-500" />
-          Registered Stearmans
+          Recently Registered
         </h2>
         <button
           onClick={() => navigate('/registry')}
@@ -179,6 +180,11 @@ function RecentOwners() {
             <p className="text-xs text-slate-400 dark:text-slate-500 truncate">
               {o.city}{o.state ? `, ${o.state}` : ''}
             </p>
+            {o.cert_date && (
+              <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">
+                Registered {o.cert_date.slice(4,6)}/{o.cert_date.slice(0,4)}
+              </p>
+            )}
           </a>
         ))}
       </div>

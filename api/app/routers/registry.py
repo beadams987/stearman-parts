@@ -23,6 +23,7 @@ class RegistryEntry(BaseModel):
     city: str = ""
     state: str = ""
     country: str = "US"
+    cert_date: str = ""
 
 
 class RegistryResponse(BaseModel):
@@ -38,6 +39,7 @@ async def list_registry(
     state: str | None = Query(default=None, description="Filter by US state (2-letter)"),
     model: str | None = Query(default=None, description="Filter by model"),
     q: str | None = Query(default=None, description="Search N-number, owner, city"),
+    sort: str = Query(default="recent", description="Sort: recent, state, name"),
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=50, ge=1, le=200),
 ) -> RegistryResponse:
@@ -65,12 +67,15 @@ async def list_registry(
 
     cursor.execute(f"""
         SELECT NNumber, SerialNumber, Manufacturer, Model, YearMfr,
-               OwnerName, City, State, Country
+               OwnerName, City, State, Country, CertIssueDate
         FROM Registry r
         WHERE {where}
-        ORDER BY r.State, r.City, r.NNumber
+        ORDER BY CASE WHEN ? = 'recent' THEN r.CertIssueDate END DESC,
+                 CASE WHEN ? = 'state' THEN r.State END ASC,
+                 CASE WHEN ? = 'name' THEN r.OwnerName END ASC,
+                 r.NNumber
         OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
-    """, *params, skip, page_size)
+    """, *params, sort, sort, sort, skip, page_size)
 
     entries = [
         RegistryEntry(
@@ -83,6 +88,7 @@ async def list_registry(
             city=row.City or "",
             state=row.State or "",
             country=row.Country or "US",
+            cert_date=row.CertIssueDate or "",
         )
         for row in cursor.fetchall()
     ]

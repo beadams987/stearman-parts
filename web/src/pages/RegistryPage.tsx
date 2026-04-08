@@ -13,6 +13,7 @@ interface RegistryEntry {
   city: string;
   state: string;
   country: string;
+  cert_date: string;
 }
 
 interface RegistryResponse {
@@ -144,6 +145,7 @@ export default function RegistryPage() {
                 <th className="pb-3 font-semibold text-slate-600 dark:text-slate-400">Location</th>
                 <th className="pb-3 font-semibold text-slate-600 dark:text-slate-400 hidden md:table-cell">S/N</th>
                 <th className="pb-3 font-semibold text-slate-600 dark:text-slate-400 hidden md:table-cell">Year</th>
+                <th className="pb-3 font-semibold text-slate-600 dark:text-slate-400 hidden lg:table-cell">Registered</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -170,6 +172,9 @@ export default function RegistryPage() {
                   </td>
                   <td className="py-3 text-slate-400 font-mono text-xs hidden md:table-cell">{entry.serial_number}</td>
                   <td className="py-3 text-slate-400 text-xs hidden md:table-cell">{entry.year_mfr}</td>
+                  <td className="py-3 text-slate-400 text-xs hidden lg:table-cell">
+                    {entry.cert_date ? `${entry.cert_date.slice(4,6)}/${entry.cert_date.slice(6,8)}/${entry.cert_date.slice(0,4)}` : ''}
+                  </td>
                 </tr>
               ))}
             </tbody>
