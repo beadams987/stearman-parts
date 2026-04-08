@@ -185,14 +185,19 @@ def process_images(args: argparse.Namespace) -> None:
     checkpoint = load_checkpoint()
     start_from = args.start_from or checkpoint.get("last_image_id", 0)
 
-    # Fetch images needing AI analysis
+    # Fetch images needing AI analysis (skip already processed in ProcessingLog)
     cursor.execute("""
-        SELECT ImageID, RenderPath, OcrText
-        FROM Images
-        WHERE (AiDescription IS NULL OR AiDescription = '')
-          AND RenderPath IS NOT NULL
-          AND ImageID > ?
-        ORDER BY ImageID
+        SELECT i.ImageID, i.RenderPath, i.OcrText
+        FROM Images i
+        WHERE (i.AiDescription IS NULL OR i.AiDescription = '')
+          AND i.RenderPath IS NOT NULL
+          AND i.ImageID > ?
+          AND NOT EXISTS (
+              SELECT 1 FROM ProcessingLog p
+              WHERE p.EntityType = 'image' AND p.EntityID = CAST(i.ImageID AS NVARCHAR)
+                AND p.ProcessType = 'ai_vision' AND p.Status = 'completed'
+          )
+        ORDER BY i.ImageID
     """, start_from)
 
     rows = cursor.fetchall()
@@ -233,6 +238,7 @@ def process_images(args: argparse.Namespace) -> None:
             description = call_gemini_vision(blob_data, api_key)
 
             if not args.dry_run and description:
+                elapsed_ms = int((time.time() - last_request_time) * 1000)
                 cursor.execute(
                     """UPDATE Images
                        SET AiDescription = ?, ModifiedAt = ?
@@ -241,6 +247,15 @@ def process_images(args: argparse.Namespace) -> None:
                     datetime.now(UTC),
                     image_id,
                 )
+                # Track in ProcessingLog
+                cursor.execute("""
+                    MERGE ProcessingLog AS target
+                    USING (SELECT 'image' AS EntityType, ? AS EntityID, 'ai_vision' AS ProcessType) AS source
+                    ON target.EntityType = source.EntityType AND target.EntityID = source.EntityID AND target.ProcessType = source.ProcessType
+                    WHEN NOT MATCHED THEN INSERT (EntityType, EntityID, ProcessType, Status, ProcessorVersion, OutputPath, DurationMs)
+                    VALUES ('image', ?, 'ai_vision', 'completed', 'gemini-2.5-flash-lite', 'Images.AiDescription', ?)
+                    WHEN MATCHED THEN UPDATE SET ProcessedAt = GETUTCDATE(), DurationMs = ?, Status = 'completed';
+                """, str(image_id), str(image_id), elapsed_ms, elapsed_ms)
                 conn.commit()
 
             if args.dry_run:
