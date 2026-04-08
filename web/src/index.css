@@ -1,34 +1,41 @@
 @import "tailwindcss";
 
+/* N401DB-inspired color system — Stearman Yellow + Crimson Red + Charcoal */
 :root {
-  --color-primary: #3b82f6;
-  --color-primary-dark: #2563eb;
-  --color-bg: #f8fafc;
-  --color-bg-secondary: #f1f5f9;
+  --color-primary: #C87A10;
+  --color-primary-dark: #A66400;
+  --color-primary-light: #F0B800;
+  --color-accent: #C02020;
+  --color-accent-light: #E04040;
+  --color-bg: #FAFAF8;
+  --color-bg-secondary: #F3F0EB;
   --color-surface: #ffffff;
-  --color-surface-hover: #f1f5f9;
-  --color-text: #0f172a;
-  --color-text-secondary: #475569;
-  --color-text-muted: #94a3b8;
-  --color-border: #e2e8f0;
+  --color-surface-hover: #F5F2ED;
+  --color-text: #1E1E1E;
+  --color-text-secondary: #5A5A52;
+  --color-text-muted: #8A8A80;
+  --color-border: #E0DDD6;
   --color-sidebar: #ffffff;
-  --color-viewer-bg: #1e293b;
+  --color-viewer-bg: #1A1A18;
   --transition-duration: 200ms;
 }
 
 .dark {
-  --color-primary: #60a5fa;
-  --color-primary-dark: #3b82f6;
-  --color-bg: #0f172a;
-  --color-bg-secondary: #1e293b;
-  --color-surface: #1e293b;
-  --color-surface-hover: #334155;
-  --color-text: #f1f5f9;
-  --color-text-secondary: #94a3b8;
-  --color-text-muted: #64748b;
-  --color-border: #334155;
-  --color-sidebar: #1e293b;
-  --color-viewer-bg: #020617;
+  --color-primary: #F0B800;
+  --color-primary-dark: #D4A000;
+  --color-primary-light: #FFD040;
+  --color-accent: #E03030;
+  --color-accent-light: #F04040;
+  --color-bg: #0F0F0D;
+  --color-bg-secondary: #1A1A18;
+  --color-surface: #1A1A18;
+  --color-surface-hover: #2A2A26;
+  --color-text: #F0F0E8;
+  --color-text-secondary: #9A9A90;
+  --color-text-muted: #6A6A62;
+  --color-border: #2A2A26;
+  --color-sidebar: #1A1A18;
+  --color-viewer-bg: #080808;
 }
 
 * {

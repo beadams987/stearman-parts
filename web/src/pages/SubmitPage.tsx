@@ -148,7 +148,7 @@ export default function SubmitPage() {
         </p>
         <button
           onClick={resetForm}
-          className="px-6 py-2.5 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"
+          className="px-6 py-2.5 text-sm font-medium rounded-lg bg-amber-600 text-white hover:bg-amber-700 cursor-pointer"
         >
           Submit Another
         </button>
@@ -195,10 +195,10 @@ export default function SubmitPage() {
           className={`
             relative border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-200
             ${dragActive
-              ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+              ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/20'
               : file
                 ? 'border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/10'
-                : 'border-slate-300 dark:border-slate-600 hover:border-blue-400 dark:hover:border-blue-500'
+                : 'border-slate-300 dark:border-slate-600 hover:border-amber-400 dark:hover:border-amber-500'
             }
           `}
         >
@@ -232,7 +232,7 @@ export default function SubmitPage() {
             <>
               <Upload className="w-10 h-10 text-slate-400 mx-auto mb-3" />
               <p className="text-sm text-slate-600 dark:text-slate-400">
-                Drag & drop a file here, or <span className="text-blue-600 dark:text-blue-400 font-medium">browse</span>
+                Drag & drop a file here, or <span className="text-amber-700 dark:text-amber-400 font-medium">browse</span>
               </p>
               <p className="text-xs text-slate-400 mt-1">Images and PDFs up to {MAX_FILE_SIZE_MB} MB</p>
             </>
@@ -252,7 +252,7 @@ export default function SubmitPage() {
             placeholder="https://example.com/stearman-drawing.pdf"
             className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700
               bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200
-              focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+              focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
           />
         </div>
 
@@ -270,7 +270,7 @@ export default function SubmitPage() {
             placeholder="What is this resource? Drawing number, part name, manual section, etc."
             className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700
               bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200
-              focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-y"
+              focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none resize-y"
           />
         </div>
 
@@ -287,7 +287,7 @@ export default function SubmitPage() {
               placeholder="For attribution"
               className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700
                 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200
-                focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
             />
           </div>
           <div>
@@ -301,7 +301,7 @@ export default function SubmitPage() {
               placeholder="For follow-up questions"
               className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700
                 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200
-                focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
             />
           </div>
         </div>
@@ -329,7 +329,7 @@ export default function SubmitPage() {
             w-full py-3 text-sm font-semibold rounded-lg transition-colors duration-150 cursor-pointer
             ${state === 'uploading'
               ? 'bg-slate-400 text-white cursor-not-allowed'
-              : 'bg-blue-600 text-white hover:bg-blue-700'
+              : 'bg-amber-600 text-white hover:bg-amber-700'
             }
           `}
         >

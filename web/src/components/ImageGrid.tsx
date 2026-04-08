@@ -26,7 +26,7 @@ function ImageCard({ image }: { image: Image }) {
     <button
       onClick={handleClick}
       className="group bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700
-        overflow-hidden hover:shadow-lg hover:border-blue-300 dark:hover:border-blue-600
+        overflow-hidden hover:shadow-lg hover:border-amber-300 dark:hover:border-amber-600
         transition-shadow duration-200 text-left w-full cursor-pointer"
     >
       {/* Thumbnail */}
@@ -53,7 +53,7 @@ function ImageCard({ image }: { image: Image }) {
 
         {/* Bundle badge */}
         {image.bundle_id && (
-          <div className="absolute top-2 right-2 bg-blue-600 text-white rounded-full p-1.5 shadow-md">
+          <div className="absolute top-2 right-2 bg-amber-600 text-white rounded-full p-1.5 shadow-md">
             <Layers className="w-3.5 h-3.5" />
           </div>
         )}
@@ -65,7 +65,7 @@ function ImageCard({ image }: { image: Image }) {
           {image.file_name}
         </p>
         {drawingNum && (
-          <p className="text-xs text-blue-600 dark:text-blue-400 mt-0.5 truncate font-mono">
+          <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5 truncate font-mono">
             {drawingNum}
           </p>
         )}

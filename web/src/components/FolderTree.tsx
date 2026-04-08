@@ -45,7 +45,7 @@ function FolderNode({ folder, level, currentFolderId, onNavigate }: FolderNodePr
         className={`
           w-full flex items-center gap-1.5 px-2 py-1.5 rounded-md text-sm text-left
           hover:bg-slate-100 dark:hover:bg-slate-700
-          ${isActive ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium' : 'text-slate-700 dark:text-slate-300'}
+          ${isActive ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 font-medium' : 'text-slate-700 dark:text-slate-300'}
         `}
         style={{ paddingLeft: `${level * 16 + 8}px` }}
       >
@@ -64,7 +64,7 @@ function FolderNode({ folder, level, currentFolderId, onNavigate }: FolderNodePr
           )}
         </span>
         {expanded || isActive ? (
-          <FolderOpen className="w-4 h-4 flex-shrink-0 text-blue-500 dark:text-blue-400" />
+          <FolderOpen className="w-4 h-4 flex-shrink-0 text-amber-600 dark:text-amber-400" />
         ) : (
           <FolderIcon className="w-4 h-4 flex-shrink-0 text-slate-400 dark:text-slate-500" />
         )}

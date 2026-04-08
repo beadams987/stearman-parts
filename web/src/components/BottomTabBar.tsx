@@ -32,7 +32,7 @@ export default function BottomTabBar() {
                 flex flex-col items-center justify-center gap-0.5 flex-1 h-full no-underline
                 transition-colors duration-150 min-w-0
                 ${active
-                  ? 'text-blue-600 dark:text-blue-400'
+                  ? 'text-amber-700 dark:text-amber-400'
                   : 'text-slate-500 dark:text-slate-400'
                 }
               `}

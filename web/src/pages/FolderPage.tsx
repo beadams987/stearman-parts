@@ -39,7 +39,7 @@ export default function FolderPage() {
       <nav className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400">
         <Link
           to="/"
-          className="flex items-center gap-1 hover:text-blue-600 dark:hover:text-blue-400"
+          className="flex items-center gap-1 hover:text-amber-700 dark:hover:text-amber-400"
         >
           <Home className="w-3.5 h-3.5" />
           <span>Home</span>
@@ -79,7 +79,7 @@ export default function FolderPage() {
               key={sub.id}
               to={`/folders/${sub.id}`}
               className="flex items-center gap-3 p-4 bg-white dark:bg-slate-800 rounded-lg border border-slate-200
-                dark:border-slate-700 hover:shadow-md hover:border-blue-300 dark:hover:border-blue-600
+                dark:border-slate-700 hover:shadow-md hover:border-amber-300 dark:hover:border-amber-600
                 transition-all duration-200 group"
             >
               <FolderIcon className="w-8 h-8 text-amber-500 dark:text-amber-400 flex-shrink-0
@@ -141,7 +141,7 @@ export default function FolderPage() {
                   className={`w-9 h-9 text-sm rounded-md cursor-pointer
                     ${
                       page === pageNum
-                        ? 'bg-blue-600 text-white'
+                        ? 'bg-amber-600 text-white'
                         : 'bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
                     }`}
                 >

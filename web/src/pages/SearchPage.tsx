@@ -40,7 +40,7 @@ function ResultCard({ result, query }: { result: SearchResult; query: string }) 
     <button
       onClick={handleClick}
       className="flex gap-4 p-4 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700
-        hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-md transition-all duration-200
+        hover:border-amber-300 dark:hover:border-amber-600 hover:shadow-md transition-all duration-200
         text-left w-full cursor-pointer group"
     >
       {/* Thumbnail */}
@@ -67,7 +67,7 @@ function ResultCard({ result, query }: { result: SearchResult; query: string }) 
             {result.file_name}
           </p>
           {result.type === 'bundle' && (
-            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 rounded font-medium flex-shrink-0">
+            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 rounded font-medium flex-shrink-0">
               <Layers className="w-3 h-3" />
               {result.page_count} pages
             </span>
@@ -79,7 +79,7 @@ function ResultCard({ result, query }: { result: SearchResult; query: string }) 
           <span className="text-xs text-slate-400 dark:text-slate-500 font-mono uppercase flex-shrink-0">
             {result.matched_field === 'drawing_number' ? 'DWG#' : result.matched_field === 'ocr_text' ? 'OCR' : 'KW'}:
           </span>
-          <span className="text-sm text-blue-600 dark:text-blue-400 font-mono truncate">
+          <span className="text-sm text-amber-700 dark:text-amber-400 font-mono truncate">
             <HighlightMatch text={result.matched_value} query={query} />
           </span>
         </div>
@@ -96,7 +96,7 @@ function ResultCard({ result, query }: { result: SearchResult; query: string }) 
           {result.drawing_numbers.map((dn) => (
             <span
               key={dn}
-              className="text-xs font-mono px-1.5 py-0.5 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded"
+              className="text-xs font-mono px-1.5 py-0.5 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 rounded"
             >
               {dn}
             </span>
@@ -177,7 +177,7 @@ export default function SearchPage() {
         </p>
         <Link
           to="/"
-          className="inline-block text-sm text-blue-600 dark:text-blue-400 hover:underline"
+          className="inline-block text-sm text-amber-700 dark:text-amber-400 hover:underline"
         >
           Back to Home
         </Link>
@@ -214,7 +214,7 @@ export default function SearchPage() {
                   className={`w-full text-left px-3 py-1.5 text-sm rounded-md cursor-pointer
                     ${
                       type === value
-                        ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium'
+                        ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 font-medium'
                         : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'
                     }`}
                 >
@@ -236,7 +236,7 @@ export default function SearchPage() {
                   className={`w-full text-left px-3 py-1.5 text-sm rounded-md cursor-pointer
                     ${
                       !folderId
-                        ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium'
+                        ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 font-medium'
                         : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'
                     }`}
                 >
@@ -249,7 +249,7 @@ export default function SearchPage() {
                     className={`w-full text-left px-3 py-1.5 text-xs rounded-md truncate cursor-pointer
                       ${
                         folderId === f.id
-                          ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium'
+                          ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 font-medium'
                           : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'
                       }`}
                   >
@@ -288,7 +288,7 @@ export default function SearchPage() {
             <Filter className="w-4 h-4" />
             Filters
             {activeFilterCount > 0 && (
-              <span className="w-5 h-5 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center">
+              <span className="w-5 h-5 rounded-full bg-amber-600 text-white text-xs flex items-center justify-center">
                 {activeFilterCount}
               </span>
             )}
@@ -299,22 +299,22 @@ export default function SearchPage() {
         {activeFilterCount > 0 && (
           <div className="flex flex-wrap gap-2">
             {type && (
-              <span className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-md">
+              <span className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 rounded-md">
                 {type === 'drawing_number' ? 'Drawing #' : type === 'ocr' ? 'Full Text (OCR)' : 'Key Word'}
                 <button
                   onClick={() => setFilterParam('type', undefined)}
-                  className="hover:text-blue-900 dark:hover:text-blue-100 cursor-pointer"
+                  className="hover:text-amber-900 dark:hover:text-amber-200 cursor-pointer"
                 >
                   <X className="w-3 h-3" />
                 </button>
               </span>
             )}
             {folderId && folders && (
-              <span className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-md">
+              <span className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 rounded-md">
                 {folders.find((f) => f.id === folderId)?.folder_name ?? `Folder ${folderId}`}
                 <button
                   onClick={() => setFilterParam('folder_id', undefined)}
-                  className="hover:text-blue-900 dark:hover:text-blue-100 cursor-pointer"
+                  className="hover:text-amber-900 dark:hover:text-amber-200 cursor-pointer"
                 >
                   <X className="w-3 h-3" />
                 </button>

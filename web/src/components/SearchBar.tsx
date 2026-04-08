@@ -78,7 +78,7 @@ export default function SearchBar({ compact = false }: SearchBarProps) {
             placeholder="Search drawings, part numbers, keywords..."
             className={`w-full pl-9 pr-8 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600
               rounded-lg text-sm text-slate-800 dark:text-slate-200 placeholder:text-slate-400
-              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+              focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500
               ${compact ? 'py-2' : 'py-2.5'}`}
           />
           {query && (
@@ -109,7 +109,7 @@ export default function SearchBar({ compact = false }: SearchBarProps) {
                 className={`px-3 py-2 text-xs font-medium whitespace-nowrap cursor-pointer
                   ${
                     searchType === value
-                      ? 'bg-blue-600 text-white'
+                      ? 'bg-amber-600 text-white'
                       : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'
                   }`}
               >
@@ -121,7 +121,7 @@ export default function SearchBar({ compact = false }: SearchBarProps) {
 
         <button
           type="submit"
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium
+          className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-medium
             transition-colors duration-150 cursor-pointer whitespace-nowrap"
         >
           Search

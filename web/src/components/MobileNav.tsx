@@ -57,7 +57,7 @@ export default function MobileNav({ open, onClose, darkMode, onToggleDarkMode }:
         {/* Drawer header */}
         <div className="flex items-center justify-between px-4 py-4 border-b border-slate-200 dark:border-slate-700">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-amber-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">ST</span>
             </div>
             <div>
@@ -85,7 +85,7 @@ export default function MobileNav({ open, onClose, darkMode, onToggleDarkMode }:
                 flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium no-underline
                 transition-colors duration-150
                 ${isActive(to)
-                  ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                  ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300'
                   : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                 }
               `}
@@ -117,7 +117,7 @@ export default function MobileNav({ open, onClose, darkMode, onToggleDarkMode }:
                     {user.profilePictureUrl ? (
                       <img src={user.profilePictureUrl} alt={user.firstName ?? 'User'} className="w-7 h-7 rounded-full" />
                     ) : (
-                      <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center">
+                      <div className="w-7 h-7 rounded-full bg-amber-600 flex items-center justify-center">
                         <span className="text-white text-xs font-medium">
                           {(user.firstName?.[0] ?? user.email?.[0] ?? 'U').toUpperCase()}
                         </span>
@@ -149,7 +149,7 @@ export default function MobileNav({ open, onClose, darkMode, onToggleDarkMode }:
                   <button
                     onClick={handleSignUp}
                     className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium
-                      bg-blue-600 text-white hover:bg-blue-700 cursor-pointer justify-center"
+                      bg-amber-600 text-white hover:bg-amber-700 cursor-pointer justify-center"
                   >
                     <UserPlus className="w-5 h-5" />
                     Sign Up

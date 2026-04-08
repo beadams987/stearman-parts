@@ -36,7 +36,7 @@ export default function ImagePage() {
         </p>
         <Link
           to="/"
-          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 text-sm"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Home
@@ -51,7 +51,7 @@ export default function ImagePage() {
       <nav className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 flex-wrap">
         <Link
           to="/"
-          className="flex items-center gap-1 hover:text-blue-600 dark:hover:text-blue-400"
+          className="flex items-center gap-1 hover:text-amber-700 dark:hover:text-amber-400"
         >
           <Home className="w-3.5 h-3.5" />
           <span>Home</span>
@@ -61,7 +61,7 @@ export default function ImagePage() {
             <ChevronRight className="w-3.5 h-3.5" />
             <Link
               to={`/folders/${f.id}`}
-              className="hover:text-blue-600 dark:hover:text-blue-400"
+              className="hover:text-amber-700 dark:hover:text-amber-400"
             >
               {f.folder_name}
             </Link>

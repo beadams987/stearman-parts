@@ -62,9 +62,7 @@ export default function Header({ darkMode, onToggleDarkMode, onToggleMobileNav, 
           to="/"
           className="flex items-center gap-2 flex-shrink-0 no-underline"
         >
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">ST</span>
-          </div>
+          <img src="/logo.jpg" alt="Stearman" className="w-8 h-8 rounded-lg object-cover" />
           <div className="hidden sm:block">
             <h1 className="text-base font-semibold text-slate-800 dark:text-slate-100 leading-tight">
               Stearman Hub
@@ -87,7 +85,7 @@ export default function Header({ darkMode, onToggleDarkMode, onToggleMobileNav, 
                   flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md no-underline
                   transition-colors duration-150
                   ${active
-                    ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium'
+                    ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 font-medium'
                     : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                   }
                 `}
@@ -133,7 +131,7 @@ export default function Header({ darkMode, onToggleDarkMode, onToggleMobileNav, 
                         className="w-7 h-7 rounded-full"
                       />
                     ) : (
-                      <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center">
+                      <div className="w-7 h-7 rounded-full bg-amber-600 flex items-center justify-center">
                         <span className="text-white text-xs font-medium">
                           {(user.firstName?.[0] ?? user.email?.[0] ?? 'U').toUpperCase()}
                         </span>
@@ -164,7 +162,7 @@ export default function Header({ darkMode, onToggleDarkMode, onToggleMobileNav, 
                   <button
                     onClick={handleSignUp}
                     className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md
-                      bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"
+                      bg-amber-600 text-white hover:bg-amber-700 cursor-pointer"
                   >
                     <UserPlus className="w-4 h-4" />
                     Sign Up

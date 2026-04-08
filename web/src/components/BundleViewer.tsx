@@ -111,8 +111,8 @@ export default function BundleViewer({
                 transition-all duration-150
                 ${
                   index === activePage
-                    ? 'border-blue-500 ring-2 ring-blue-500/30'
-                    : 'border-slate-200 dark:border-slate-600 hover:border-blue-300 dark:hover:border-blue-500'
+                    ? 'border-amber-500 ring-2 ring-amber-500/30'
+                    : 'border-slate-200 dark:border-slate-600 hover:border-amber-300 dark:hover:border-amber-500'
                 }`}
             >
               <img

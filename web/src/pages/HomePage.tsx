@@ -61,7 +61,7 @@ export default function HomePage() {
       <div className="text-center space-y-4">
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 dark:text-slate-50 leading-tight">
           Boeing-Stearman<br />
-          <span className="text-blue-600 dark:text-blue-400">Information Hub</span>
+          <span className="text-amber-700 dark:text-amber-400">Information Hub</span>
         </h1>
         <p className="text-base sm:text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
           The complete digital archive of Boeing-Stearman biplane engineering drawings,
@@ -81,8 +81,8 @@ export default function HomePage() {
           title="Browse Drawings"
           stat={stats?.total_images?.toLocaleString() ?? '7,673'}
           description="Engineering drawings & frame diagrams"
-          color="bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
-          hoverBorder="hover:border-blue-300 dark:hover:border-blue-600"
+          color="bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400"
+          hoverBorder="hover:border-amber-300 dark:hover:border-amber-600"
           onClick={() => { const firstFolder = folders?.[0]; if (firstFolder) navigate(`/folders/${firstFolder.id}`); else navigate('/search'); }}
         />
         <QuickCard
@@ -126,10 +126,10 @@ export default function HomePage() {
                 key={folder.id}
                 onClick={() => navigate(`/folders/${folder.id}`)}
                 className="flex items-center gap-3 p-4 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700
-                  hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-md transition-all duration-200
+                  hover:border-amber-300 dark:hover:border-amber-600 hover:shadow-md transition-all duration-200
                   text-left group cursor-pointer"
               >
-                <FolderOpen className="w-10 h-10 text-blue-500 dark:text-blue-400 flex-shrink-0 p-2 bg-blue-50 dark:bg-blue-900/30 rounded-lg" />
+                <FolderOpen className="w-10 h-10 text-amber-600 dark:text-amber-400 flex-shrink-0 p-2 bg-amber-50 dark:bg-amber-900/30 rounded-lg" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">
                     {folder.folder_name}
@@ -140,7 +140,7 @@ export default function HomePage() {
                       : 'Browse contents'}
                   </p>
                 </div>
-                <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-blue-500 group-hover:translate-x-0.5 transition-transform flex-shrink-0" />
+                <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-amber-600 group-hover:translate-x-0.5 transition-transform flex-shrink-0" />
               </button>
             ))}
           </div>

@@ -188,7 +188,7 @@ export default function ImageViewer({
               <p className="text-lg mb-2">Failed to load image</p>
               <button
                 onClick={handleDownload}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
+                className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 text-sm"
               >
                 Download Original
               </button>
@@ -254,8 +254,8 @@ export default function ImageViewer({
                 {metadata.drawingNumbers.map((dn) => (
                   <span
                     key={dn}
-                    className="inline-block px-2 py-0.5 text-xs font-mono bg-blue-50 dark:bg-blue-900/30
-                      text-blue-700 dark:text-blue-300 rounded-md border border-blue-200 dark:border-blue-800"
+                    className="inline-block px-2 py-0.5 text-xs font-mono bg-amber-50 dark:bg-amber-900/30
+                      text-amber-800 dark:text-amber-300 rounded-md border border-amber-200 dark:border-amber-800"
                   >
                     {dn}
                   </span>
