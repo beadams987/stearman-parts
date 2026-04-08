@@ -1,7 +1,7 @@
 {
   "navigationFallback": {
     "rewrite": "/index.html",
-    "exclude": ["/assets/*", "/favicon.*", "/apple-touch-icon.png", "/*.svg", "/robots.txt", "/sitemap.xml"]
+    "exclude": ["/assets/*", "/favicon.*", "/apple-touch-icon.png", "/*.svg", "/robots.txt", "/sitemap.xml", "/seo/*"]
   },
   "globalHeaders": {
     "X-Content-Type-Options": "nosniff",
