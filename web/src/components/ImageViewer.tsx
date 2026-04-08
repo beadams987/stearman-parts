@@ -18,6 +18,7 @@ interface ImageViewerProps {
     keywords: string[];
     folderName: string;
     notes: string | null;
+    source?: string;
   };
   showMetadata?: boolean;
 }
@@ -290,6 +291,17 @@ export default function ImageViewer({
               </dt>
               <dd className="text-sm text-slate-800 dark:text-slate-200 mt-0.5">
                 {metadata.notes}
+              </dd>
+            </div>
+          )}
+
+          {metadata.source && (
+            <div className="pt-2 border-t border-slate-200 dark:border-slate-700">
+              <dt className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                Source
+              </dt>
+              <dd className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 italic">
+                {metadata.source}
               </dd>
             </div>
           )}

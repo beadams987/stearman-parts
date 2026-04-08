@@ -83,6 +83,7 @@ export default function ImagePage() {
           keywords: image.keywords,
           folderName: image.folder_name,
           notes: image.notes,
+          source: 'Russ Aviation Collection',
         }}
       />
 

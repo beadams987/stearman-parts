@@ -120,14 +120,14 @@ PARTS_CATALOGS = [
     CatalogItem(
         id="parts-catalog-pt13d-n2s5",
         title="Parts Catalog (PT-13D / N2S-5)",
-        description="Illustrated parts breakdown and part number reference. Scott Delawder contribution.",
+        description="Illustrated parts breakdown and part number reference for Army Model PT-13D and Navy Model N2S-5.",
         category="Parts & Catalogs",
         container="manuals",
         blob_path="Stearman_Parts_Catalog_PT-13D_N2S-5.pdf",
         content_type="pdf",
         size_mb=149,
         tags=["parts", "IPC", "part numbers"],
-        source="Scott Delawder / Russ Aviation",
+        source="Russ Aviation",
         models=["PT-13D", "N2S-5"],
     ),
     CatalogItem(
