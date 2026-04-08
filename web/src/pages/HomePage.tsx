@@ -182,7 +182,7 @@ function RecentOwners() {
             </p>
             {o.cert_date && (
               <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">
-                Registered {o.cert_date.slice(4,6)}/{o.cert_date.slice(0,4)}
+                Acquired: {o.cert_date.slice(4,6)}/{o.cert_date.slice(6,8)}/{o.cert_date.slice(0,4)}
               </p>
             )}
           </a>
