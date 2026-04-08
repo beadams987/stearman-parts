@@ -17,7 +17,7 @@ app = func.AsgiFunctionApp(app=fastapi_app, http_auth_level=func.AuthLevel.ANONY
 
 
 @app.timer_trigger(
-    schedule="0 0 10 * * 1",  # Every Monday at 10:00 UTC
+    schedule="0 0 10 * * *",  # Daily at 10:00 UTC
     arg_name="timer",
     run_on_startup=False,
 )

@@ -81,8 +81,105 @@ def discover_events(gemini_api_key: str, sql_connection_string: str) -> dict:
 
         time.sleep(2)  # Rate limit between searches
 
+    # Auto-populate recurring annual events for next year
+    recurring_new = _populate_recurring_events(conn)
+    total_new += recurring_new
+
     conn.close()
     return {"new": total_new, "updated": total_updated, "errors": errors}
+
+
+# Annual recurring events — auto-populated with estimated dates
+RECURRING_EVENTS = [
+    {
+        "title_pattern": "National Stearman Fly-In",
+        "title_template": "{nth} National Stearman Fly-In ({year})",
+        "description": "Annual gathering of Boeing Stearman biplanes. Week-long event with formation flying, contests, seminars, and the SRA Annual Meeting.",
+        "event_type": "fly-in",
+        "month": 9, "day": 7, "duration_days": 5,  # First week of September
+        "city": "Galesburg", "state": "IL", "country": "USA",
+        "venue": "Galesburg Municipal Airport (KGBG)",
+        "url": "https://www.stearmanflyin.com",
+        "aircraft": ["Stearman PT-17", "Stearman N2S", "Boeing Model 75"],
+        "base_year": 2026, "base_nth": 55,
+    },
+    {
+        "title_pattern": "EAA AirVenture Oshkosh",
+        "title_template": "EAA AirVenture Oshkosh {year}",
+        "description": "The world's greatest aviation celebration. Stearmans are regular fixtures in the vintage/warbird areas.",
+        "event_type": "airshow",
+        "month": 7, "day": 26, "duration_days": 6,  # Last week of July
+        "city": "Oshkosh", "state": "WI", "country": "USA",
+        "venue": "Wittman Regional Airport (KOSH)",
+        "url": "https://www.eaa.org/airventure",
+        "aircraft": ["Various Stearman models"],
+        "base_year": 2026, "base_nth": 0,
+    },
+    {
+        "title_pattern": "Sun 'n Fun Aerospace Expo",
+        "title_template": "Sun 'n Fun Aerospace Expo {year}",
+        "description": "Major annual fly-in and air show. Stearman biplanes regularly appear.",
+        "event_type": "airshow",
+        "month": 3, "day": 30, "duration_days": 5,  # Late March
+        "city": "Lakeland", "state": "FL", "country": "USA",
+        "venue": "Lakeland Linder International Airport (KLAL)",
+        "url": "https://www.flysnf.org",
+        "aircraft": ["Various Stearman models"],
+        "base_year": 2027, "base_nth": 0,
+    },
+]
+
+
+def _populate_recurring_events(conn: pyodbc.Connection) -> int:
+    """Auto-populate recurring annual events for the next 18 months."""
+    import json as _json
+    from datetime import timedelta
+
+    cur = conn.cursor()
+    now = datetime.now()
+    cutoff = now + timedelta(days=548)  # ~18 months
+    new_count = 0
+
+    for event in RECURRING_EVENTS:
+        for year in [now.year, now.year + 1]:
+            start = datetime(year, event["month"], event["day"])
+            if start < now - timedelta(days=2) or start > cutoff:
+                continue
+
+            end = start + timedelta(days=event["duration_days"])
+            nth = event["base_nth"] + (year - event["base_year"]) if event["base_nth"] else 0
+            ordinals = {1: "1st", 2: "2nd", 3: "3rd"}
+            nth_str = ordinals.get(nth % 10, f"{nth}th") if nth else ""
+            title = event["title_template"].format(year=year, nth=nth_str)
+
+            location = f"{event['city']}, {event['state']}, {event['country']}"
+
+            # Check if already exists
+            cur.execute("SELECT COUNT(*) FROM Events WHERE Title LIKE ? AND YEAR(StartDate) = ?",
+                        f"%{event['title_pattern']}%{year}%", year)
+            if cur.fetchone()[0] > 0:
+                continue
+
+            try:
+                cur.execute("""
+                    INSERT INTO Events (Title, Description, EventType, StartDate, EndDate,
+                        Location, City, StateProvince, Country, Venue, EventURL, Source,
+                        FeaturedAircraft, DateEstimated, Status)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Annual recurring event', ?, 1, 'upcoming')
+                """,
+                    title, event["description"], event["event_type"],
+                    start.strftime("%Y-%m-%d"), end.strftime("%Y-%m-%d"),
+                    location, event["city"], event["state"], event["country"],
+                    event["venue"], event["url"], _json.dumps(event["aircraft"]),
+                )
+                conn.commit()
+                new_count += 1
+                log.info("  Added recurring: %s", title)
+            except Exception as e:
+                log.warning("  Recurring event skip: %s — %s", title, e)
+                conn.rollback()
+
+    return new_count
 
 
 def purge_past_events(sql_connection_string: str) -> int:
