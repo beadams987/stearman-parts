@@ -3,7 +3,6 @@ import { usePageMeta } from '../hooks/usePageMeta.ts';
 import { useEffect, useState } from 'react';
 import {
   Image as ImageIcon,
-  FolderOpen,
   Search,
   ArrowRight,
   BookOpen,
@@ -13,7 +12,7 @@ import {
   Clock,
   ExternalLink,
 } from 'lucide-react';
-import { useStats, useFolders } from '../api/hooks.ts';
+import { useStats } from '../api/hooks.ts';
 import apiClient from '../api/client.ts';
 import SearchBar from '../components/SearchBar.tsx';
 
@@ -128,7 +127,7 @@ function UpcomingEvents() {
 export default function HomePage() {
   const navigate = useNavigate();
   const { data: stats } = useStats();
-  const { data: folders } = useFolders();
+
 
   usePageMeta(
     'Home',
@@ -163,7 +162,7 @@ export default function HomePage() {
           description="Engineering drawings & frame diagrams"
           color="bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400"
           hoverBorder="hover:border-amber-300 dark:hover:border-amber-600"
-          onClick={() => { const firstFolder = folders?.[0]; if (firstFolder) navigate(`/folders/${firstFolder.id}`); else navigate('/search'); }}
+          onClick={() => navigate('/folders/400006')}
         />
         <QuickCard
           icon={BookOpen}
@@ -196,39 +195,6 @@ export default function HomePage() {
 
       {/* Upcoming Events Preview */}
       <UpcomingEvents />
-
-      {/* Folder grid */}
-      {folders && folders.length > 0 && (
-        <div>
-          <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4">
-            Browse by Category
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {folders.map((folder) => (
-              <button
-                key={folder.id}
-                onClick={() => navigate(`/folders/${folder.id}`)}
-                className="flex items-center gap-3 p-4 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700
-                  hover:border-amber-300 dark:hover:border-amber-600 hover:shadow-md transition-all duration-200
-                  text-left group cursor-pointer"
-              >
-                <FolderOpen className="w-10 h-10 text-amber-600 dark:text-amber-400 flex-shrink-0 p-2 bg-amber-50 dark:bg-amber-900/30 rounded-lg" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">
-                    {folder.folder_name}
-                  </p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    {folder.image_count > 0
-                      ? `${folder.image_count} images`
-                      : 'Browse contents'}
-                  </p>
-                </div>
-                <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-amber-600 group-hover:translate-x-0.5 transition-transform flex-shrink-0" />
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Stearman Resources / Partners */}
       <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
