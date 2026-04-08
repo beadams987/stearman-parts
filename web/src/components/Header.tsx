@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@workos-inc/authkit-react';
-import { Moon, Sun, Menu, LogOut, LogIn, UserPlus, BookOpen } from 'lucide-react';
+import { Moon, Sun, Menu, LogOut, LogIn, UserPlus, BookOpen, Upload } from 'lucide-react';
 import SearchBar from './SearchBar.tsx';
 
 interface HeaderProps {
@@ -64,6 +64,14 @@ export default function Header({ darkMode, onToggleDarkMode, onToggleSidebar }: 
           >
             <BookOpen className="w-4 h-4" />
             Manuals
+          </Link>
+          <Link
+            to="/submit"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md
+              text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 no-underline"
+          >
+            <Upload className="w-4 h-4" />
+            Submit
           </Link>
         </nav>
 

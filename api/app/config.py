@@ -21,6 +21,11 @@ class Settings(BaseSettings):
     BLOB_THUMBS_CONTAINER_NAME: str = "thumbnails"
     BLOB_RENDERS_CONTAINER_NAME: str = "renders"
     BLOB_MANUALS_CONTAINER_NAME: str = "manuals"
+    BLOB_SUBMISSIONS_CONTAINER_NAME: str = "submissions"
+
+    # Submissions security
+    SUBMISSIONS_MAX_FILE_SIZE_MB: int = 50
+    SUBMISSIONS_CAPTCHA_SECRET: str = ""  # hCaptcha secret key
 
     # Azure AI Search
     AZURE_SEARCH_ENDPOINT: str = ""
