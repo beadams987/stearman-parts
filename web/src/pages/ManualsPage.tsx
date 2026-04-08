@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { FileText, Download, BookOpen } from 'lucide-react';
+import { usePageMeta } from '../hooks/usePageMeta.ts';
 import apiClient from '../api/client.ts';
 
 interface Manual {
@@ -13,6 +14,11 @@ interface Manual {
 export default function ManualsPage() {
   const [manuals, setManuals] = useState<Manual[]>([]);
   const [loading, setLoading] = useState(true);
+
+  usePageMeta(
+    'Technical Manuals',
+    'Download official Boeing-Stearman reference manuals: Erection & Maintenance Instructions and Parts Catalog for PT-13D / N2S-5.',
+  );
 
   useEffect(() => {
     apiClient

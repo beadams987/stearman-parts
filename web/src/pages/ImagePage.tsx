@@ -1,4 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
+import { usePageMeta } from '../hooks/usePageMeta.ts';
 import { ChevronRight, Home, ArrowLeft } from 'lucide-react';
 import { useImage } from '../api/hooks.ts';
 import ImageViewer from '../components/ImageViewer.tsx';
@@ -9,6 +10,14 @@ export default function ImagePage() {
   const imageId = id ? Number(id) : undefined;
 
   const { data: image, isLoading, error } = useImage(imageId);
+
+  const drawingNums = image?.drawing_numbers?.join(', ') ?? '';
+  const kws = image?.keywords?.join(', ') ?? '';
+  const pageTitle = drawingNums || image?.file_name || 'Image';
+  usePageMeta(
+    pageTitle,
+    `${pageTitle}${kws ? ` — ${kws}` : ''} — Stearman engineering drawing`,
+  );
 
   if (isLoading) {
     return (

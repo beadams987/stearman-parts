@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { usePageMeta } from '../hooks/usePageMeta.ts';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { Search, Layers, Image as ImageIcon, Filter, X } from 'lucide-react';
 import { useSearch, useFolders } from '../api/hooks.ts';
@@ -125,6 +126,11 @@ export default function SearchPage() {
   const folderId = folderIdParam ? Number(folderIdParam) : undefined;
   const pageParam = searchParams.get('page');
   const page = pageParam ? Number(pageParam) : 1;
+
+  usePageMeta(
+    query ? `Search: ${query}` : 'Search',
+    'Search Stearman engineering drawings by drawing number, keyword, or full text.',
+  );
 
   const [showFilters, setShowFilters] = useState(false);
 

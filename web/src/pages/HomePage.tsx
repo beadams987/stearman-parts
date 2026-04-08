@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { usePageMeta } from '../hooks/usePageMeta.ts';
 import {
   Image as ImageIcon,
   FolderOpen,
@@ -31,6 +32,11 @@ export default function HomePage() {
   const navigate = useNavigate();
   const { data: stats } = useStats();
   const { data: folders } = useFolders();
+
+  usePageMeta(
+    'Home',
+    'Complete searchable archive of 7,673 Boeing-Stearman engineering drawings, frame diagrams, and service manual pages.',
+  );
 
   return (
     <div className="max-w-4xl mx-auto space-y-10 py-8 px-4">

@@ -1,19 +1,7 @@
-# LBCD Migration Script Dependencies
-# Install with: pip install -r requirements.txt
-
-# Azure SQL connectivity via ODBC
-# Requires ODBC Driver 18 for SQL Server installed on the system
-# See: https://learn.microsoft.com/en-us/sql/connect/odbc/linux-mac/installing-the-microsoft-odbc-driver-for-sql-server
+# OCR pipeline dependencies
+pytesseract>=0.3.10
+Pillow>=10.0.0
+PyMuPDF>=1.24.0
 pyodbc>=5.1.0
-
-# Azure Blob Storage SDK for uploading images
 azure-storage-blob>=12.19.0
-
-# Azure credential management (DefaultAzureCredential for managed identity / CLI auth)
-azure-identity>=1.15.0
-
-# Progress bars for long-running extraction and upload operations
-tqdm>=4.66.0
-
-# TIFF validation, dimension extraction, and thumbnail generation
-Pillow>=10.2.0
+azure-search-documents>=11.4.0

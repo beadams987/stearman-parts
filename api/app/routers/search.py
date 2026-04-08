@@ -66,15 +66,30 @@ def _sql_fallback_search(
 
     where = " AND ".join(conditions)
 
-    # Count total matches
+    # Also search OCR text and manual pages
+    ocr_conditions = ["i.OcrText LIKE ?"]
+    ocr_params: list[Any] = [f"%{query}%"]
+    if folder_id is not None:
+        ocr_conditions.append("i.FolderID = ?")
+        ocr_params.append(folder_id)
+    ocr_where = " AND ".join(ocr_conditions)
+
+    # Count total matches (index matches + OCR matches)
     count_sql = f"""
-        SELECT COUNT(DISTINCT i.ImageID)
-        FROM ImageIndexes ix
-        JOIN IndexTypes it ON ix.IndexTypeID = it.IndexTypeID
-        JOIN Images i ON ix.ImageID = i.ImageID
-        WHERE {where}
+        SELECT COUNT(*) FROM (
+            SELECT DISTINCT i.ImageID
+            FROM ImageIndexes ix
+            JOIN IndexTypes it ON ix.IndexTypeID = it.IndexTypeID
+            JOIN Images i ON ix.ImageID = i.ImageID
+            WHERE {where}
+            UNION
+            SELECT DISTINCT i.ImageID
+            FROM Images i
+            WHERE {ocr_where}
+        ) combined
     """
-    cursor.execute(count_sql, *params)
+    all_count_params = params + ocr_params
+    cursor.execute(count_sql, *all_count_params)
     total_count: int = cursor.fetchone()[0]
 
     # Fetch page of results — group by image, aggregate index values

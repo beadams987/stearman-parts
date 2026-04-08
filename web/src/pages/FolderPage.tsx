@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { usePageMeta } from '../hooks/usePageMeta.ts';
 import { useParams, Link } from 'react-router-dom';
 import { ChevronRight, Home, Folder as FolderIcon } from 'lucide-react';
 import { useFolder, useFolders, useFolderImages } from '../api/hooks.ts';
@@ -12,6 +13,11 @@ export default function FolderPage() {
   const { data: folder, isLoading: folderLoading } = useFolder(folderId);
   const { data: subfolders } = useFolders(folderId);
   const { data: imageData, isLoading: imagesLoading } = useFolderImages(folderId, page);
+
+  usePageMeta(
+    folder?.folder_name ?? 'Folder',
+    folder ? `Browse ${folder.folder_name} — Stearman engineering drawings` : undefined,
+  );
 
   if (folderLoading) {
     return (
