@@ -8,7 +8,6 @@ import pyodbc
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
 
-from app.config import Settings, get_settings
 from app.database import get_db
 
 router = APIRouter(prefix="/api/events", tags=["events"])
