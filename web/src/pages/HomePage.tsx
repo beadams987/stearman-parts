@@ -9,7 +9,6 @@ import {
   Upload,
   Calendar,
   MapPin,
-  Clock,
   ExternalLink,
 } from 'lucide-react';
 import { useStats } from '../api/hooks.ts';

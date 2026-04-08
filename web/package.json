@@ -5,9 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "eslint src/ --fix --quiet 2>/dev/null; tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "prebuild": "npx tsc --noEmit 2>&1 | grep TS6133 | while read line; do file=$(echo \"$line\" | cut -d\"(\" -f1); import=$(echo \"$line\" | grep -oP \"'[^']+'\"); echo \"Unused: $import in $file\"; done || true",
+    "lint:fix": "eslint src/ --fix || true"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.90.21",
