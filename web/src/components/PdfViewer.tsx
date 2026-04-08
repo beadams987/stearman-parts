@@ -131,7 +131,7 @@ export default function PdfViewer({ url }: PdfViewerProps) {
         });
     });
     // resizeKey forces re-render when container resizes
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [pdfDoc, currentPage, scale, zoomMode, resizeKey]);
 
   // Navigation
