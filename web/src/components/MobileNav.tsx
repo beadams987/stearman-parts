@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@workos-inc/authkit-react';
 import {
-  X, Home, FolderOpen, BookOpen, Upload, Search, Calendar,
+  X, Home, FolderOpen, BookOpen, Upload, Search, Calendar, Plane,
   LogIn, UserPlus, LogOut, Moon, Sun,
 } from 'lucide-react';
 
@@ -18,6 +18,7 @@ const navItems = [
   { to: '/folders/1', icon: FolderOpen, label: 'Browse Drawings' },
   { to: '/manuals', icon: BookOpen, label: 'Manuals Library' },
   { to: '/events', icon: Calendar, label: 'Events' },
+  { to: '/registry', icon: Plane, label: 'Owner Directory' },
   { to: '/submit', icon: Upload, label: 'Submit a Resource' },
   { to: '/search?q=', icon: Search, label: 'Search' },
 ];
