@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import {
   FileText, Download, BookOpen, Eye, X, Search,
-  Filter, ChevronLeft, ChevronRight, Library, Tag, Plane,
+  Filter, ChevronLeft, ChevronRight, Library, Plane,
 } from 'lucide-react';
 import { usePageMeta } from '../hooks/usePageMeta.ts';
 import apiClient from '../api/client.ts';
