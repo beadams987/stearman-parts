@@ -178,8 +178,7 @@ export default function HomePage() {
       {/* Footer note */}
       <div className="text-center text-xs text-slate-400 dark:text-slate-500 pb-4">
         <p>
-          Original data digitized by AirLog Imaging, May 2001.
-          Archive maintained by Russ Aviation.
+          A community resource for Boeing-Stearman Kaydet owners, restorers, and enthusiasts.
         </p>
       </div>
     </div>
