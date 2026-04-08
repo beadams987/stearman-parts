@@ -80,8 +80,8 @@ def _sql_ocr_search(
     exclude_image_ids: list[int] | None = None,
 ) -> dict[str, Any]:
     """Search only the OcrText column."""
-    conditions = ["i.OcrText LIKE ?"]
-    params: list[Any] = [f"%{query}%"]
+    conditions = ["(i.OcrText LIKE ? OR i.AiDescription LIKE ?)"]
+    params: list[Any] = [f"%{query}%", f"%{query}%"]
 
     if folder_id is not None:
         conditions.append("i.FolderID = ?")
