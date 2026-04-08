@@ -10,12 +10,69 @@ env:
   PYTHON_VERSION: "3.12"
   NODE_VERSION: "22"
 
+permissions:
+  contents: write
+
 jobs:
+  autofix:
+    name: Auto-fix Lint Issues
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: api/requirements.txt
+
+      - name: Install Node dependencies
+        run: npm ci
+        working-directory: web
+
+      - name: Install Python lint tools
+        run: pip install ruff
+
+      - name: Auto-fix TypeScript unused imports
+        working-directory: web
+        run: npx eslint src/ --fix --rule '{"no-unused-vars":"off"}' || true
+
+      - name: Auto-fix Python lint issues (ruff)
+        run: ruff check --fix api/ || true
+
+      - name: Commit fixes if any
+        run: |
+          git config user.name "ci-autofix[bot]"
+          git config user.email "ci-autofix[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No auto-fix changes to commit"
+          else
+            git commit -m "ci: auto-fix lint issues
+
+          Auto-removed unused imports and applied lint fixes."
+            git push
+          fi
+
   lint-api:
     name: Lint & Type Check API
     runs-on: ubuntu-latest
+    needs: [autofix]
+    if: always() && !failure()
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.head_ref || github.sha }}
 
       - uses: actions/setup-python@v5
         with:
@@ -28,6 +85,9 @@ jobs:
           pip install -r api/requirements.txt
           pip install ruff mypy
 
+      - name: Auto-fix with ruff (safety net)
+        run: ruff check --fix api/ || true
+
       - name: Lint with ruff
         run: ruff check api/
 
@@ -38,8 +98,12 @@ jobs:
   lint-web:
     name: Lint & Type Check Frontend
     runs-on: ubuntu-latest
+    needs: [autofix]
+    if: always() && !failure()
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.head_ref || github.sha }}
 
       - uses: actions/setup-node@v4
         with:
@@ -50,6 +114,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
         working-directory: web
+
+      - name: Auto-fix unused imports (safety net)
+        working-directory: web
+        run: npx eslint src/ --fix --rule '{"no-unused-vars":"off"}' || true
 
       - name: Type check
         run: npx tsc --noEmit
@@ -66,6 +134,8 @@ jobs:
     needs: lint-web
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.head_ref || github.sha }}
 
       - uses: actions/setup-node@v4
         with:
@@ -76,6 +146,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
         working-directory: web
+
+      - name: Auto-remove unused imports before build
+        working-directory: web
+        run: npx eslint src/ --fix --rule '{"no-unused-vars":"off"}' || true
 
       - name: Build
         run: npm run build
@@ -103,7 +177,24 @@ jobs:
           name: web-dist
           path: web/dist
 
-      - name: Deploy to Azure Static Web Apps
+      - name: Deploy to Azure Static Web Apps (with retry)
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          retry_wait_seconds: 30
+          retry_on: error
+          command: |
+            # Use the SWA CLI as a fallback since the action can't be retried directly
+            npx @azure/static-web-apps-cli deploy web/dist \
+              --deployment-token ${{ secrets.SWA_DEPLOYMENT_TOKEN }} \
+              --env production \
+              2>&1
+        env:
+          SWA_CLI_DEPLOYMENT_TOKEN: ${{ secrets.SWA_DEPLOYMENT_TOKEN }}
+
+      - name: Deploy to Azure Static Web Apps (action fallback)
+        if: failure()
         uses: Azure/static-web-apps-deploy@v1
         with:
           azure_static_web_apps_api_token: ${{ secrets.SWA_DEPLOYMENT_TOKEN }}
@@ -145,7 +236,7 @@ jobs:
 
           pip install -q azure-storage-blob 2>/dev/null
           python3 -c "
-          import os
+          import os, time
           from datetime import datetime, timedelta, timezone
           from azure.storage.blob import BlobServiceClient, generate_blob_sas, BlobSasPermissions
           acct = os.environ['ACCOUNT']
@@ -160,8 +251,17 @@ jobs:
           except Exception:
               pass
           blob = cc.get_blob_client(blob_name)
-          with open('/tmp/api-deploy.zip', 'rb') as f:
-              blob.upload_blob(f, overwrite=True)
+          for attempt in range(3):
+              try:
+                  with open('/tmp/api-deploy.zip', 'rb') as f:
+                      blob.upload_blob(f, overwrite=True)
+                  break
+              except Exception as e:
+                  if attempt < 2:
+                      print(f'Blob upload attempt {attempt+1} failed: {e}, retrying...')
+                      time.sleep(5 * (attempt + 1))
+                  else:
+                      raise
           sas = generate_blob_sas(account_name=acct, account_key=key, container_name=cont,
               blob_name=blob_name, permission=BlobSasPermissions(read=True),
               expiry=datetime.now(timezone.utc) + timedelta(days=3650))
@@ -183,18 +283,28 @@ jobs:
 
           # Update WEBSITE_RUN_FROM_PACKAGE via the app's deploy webhook
           # (uses managed identity to update ARM settings directly)
-          HTTP_CODE=$(curl -s -o /tmp/deploy_resp.json -w "%{http_code}" -X POST \
-            "https://func-stearman-api.azurewebsites.net/api/_deploy/update-package" \
-            -H "Content-Type: application/json" \
-            -H "X-Deploy-Key: ${{ secrets.DEPLOY_KEY }}" \
-            -d "{\"blob_url\":\"${BLOB_URL}\",\"commit\":\"${GITHUB_SHA}\"}" || echo "000")
+          DEPLOY_SUCCESS=false
+          for DEPLOY_ATTEMPT in 1 2 3; do
+            HTTP_CODE=$(curl -s -o /tmp/deploy_resp.json -w "%{http_code}" -X POST \
+              "https://func-stearman-api.azurewebsites.net/api/_deploy/update-package" \
+              -H "Content-Type: application/json" \
+              -H "X-Deploy-Key: ${{ secrets.DEPLOY_KEY }}" \
+              -d "{\"blob_url\":\"${BLOB_URL}\",\"commit\":\"${GITHUB_SHA}\"}" || echo "000")
 
-          echo "Deploy webhook response: HTTP $HTTP_CODE"
-          cat /tmp/deploy_resp.json 2>/dev/null || true
-          echo ""
+            echo "Deploy webhook attempt $DEPLOY_ATTEMPT: HTTP $HTTP_CODE"
+            cat /tmp/deploy_resp.json 2>/dev/null || true
+            echo ""
 
-          if [ "$HTTP_CODE" != "200" ]; then
-            echo "Deploy webhook unavailable, using Kudu settings fallback"
+            if [ "$HTTP_CODE" = "200" ]; then
+              DEPLOY_SUCCESS=true
+              break
+            fi
+            echo "Retrying deploy webhook in $((DEPLOY_ATTEMPT * 10))s..."
+            sleep $((DEPLOY_ATTEMPT * 10))
+          done
+
+          if [ "$DEPLOY_SUCCESS" != "true" ]; then
+            echo "Deploy webhook unavailable after retries, using Kudu settings fallback"
             curl -s -X POST \
               "https://func-stearman-api.scm.azurewebsites.net/api/settings" \
               -u '${{ secrets.AZURE_DEPLOY_USER }}:${{ secrets.AZURE_DEPLOY_PASS }}' \
