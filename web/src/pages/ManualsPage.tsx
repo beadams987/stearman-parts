@@ -49,7 +49,7 @@ export default function ManualsPage() {
   const apiBase = import.meta.env.VITE_API_URL || '';
 
   const getDownloadUrl = (manual: Manual) =>
-    `${apiBase}/api/manuals/${manual.id}/download`;
+    `${apiBase}/manuals/${manual.id}/download`;
 
   return (
     <div className="max-w-5xl mx-auto space-y-8 py-8 px-4">
