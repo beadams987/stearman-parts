@@ -65,7 +65,7 @@ export default function HomePage() {
         </h1>
         <p className="text-base sm:text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
           The complete digital archive of Boeing-Stearman biplane engineering drawings,
-          technical manuals, and service documents. Digitized from the original 4-disc set.
+          technical manuals, and service documents for the Boeing-Stearman Kaydet.
         </p>
       </div>
 

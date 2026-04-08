@@ -199,7 +199,7 @@ async def get_image(
         folder_name=folder_name,
         folder_path=folder_path,
         related_images=related_images,
-        source_disc=row.SourceDiscNumber,
+        # source_disc removed from API response — internal provenance only
         source_image_id=row.SourceImageID,
         created_at=row.CreatedAt,
     )

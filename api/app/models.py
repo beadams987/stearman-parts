@@ -51,7 +51,7 @@ class ImageDetailResponse(ImageResponse):
     folder_name: str | None = None
     folder_path: list[FolderBreadcrumb] = Field(default_factory=list)
     related_images: list[ImageResponse] = Field(default_factory=list)
-    source_disc: int | None = None
+    # source_disc removed — internal provenance only, not user-facing
     source_image_id: int | None = None
     created_at: datetime | None = None
 
