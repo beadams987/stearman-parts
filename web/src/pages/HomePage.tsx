@@ -139,8 +139,9 @@ function RecentOwners() {
   useEffect(() => {
     apiClient
       .get<{ entries: RegistryPreview[] }>('/registry', { params: { page_size: 6 } })
-      .then((res: { data: { entries: RegistryPreview[]; total: number } }) => {
-        setOwners(res.data.entries.slice(0, 6));
+      .then((res) => {
+        const d = res.data as { entries: RegistryPreview[] };
+        setOwners(d.entries.slice(0, 6));
       })
       .catch(() => setOwners([]));
   }, []);
