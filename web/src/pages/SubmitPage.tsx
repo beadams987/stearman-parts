@@ -41,7 +41,7 @@ export default function SubmitPage() {
   // Render captcha after script loads
   const renderCaptcha = useCallback(() => {
     if (!HCAPTCHA_SITE_KEY || !captchaRef.current) return;
-    const w = window as any;
+    const w = window as unknown as Record<string, { render: (el: HTMLElement, opts: Record<string, unknown>) => void }>;
     if (w.hcaptcha && captchaRef.current.childElementCount === 0) {
       w.hcaptcha.render(captchaRef.current, {
         sitekey: HCAPTCHA_SITE_KEY,
@@ -118,9 +118,9 @@ export default function SubmitPage() {
       }
 
       setState('success');
-    } catch (err: any) {
+    } catch (err: unknown) {
       setState('error');
-      setErrorMsg(err.message || 'Something went wrong. Please try again.');
+      setErrorMsg(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
     }
   };
 
