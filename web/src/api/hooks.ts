@@ -82,7 +82,7 @@ export function useBundle(id: number | undefined) {
 /** Full-text search with filters and pagination. */
 export function useSearch(
   query: string,
-  type?: 'drawing_number' | 'keyword',
+  type?: 'drawing_number' | 'keyword' | 'ocr',
   folderId?: number,
   page = 1,
 ) {

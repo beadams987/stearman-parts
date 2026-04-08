@@ -39,6 +39,97 @@ def _get_search_service(settings: Settings) -> SearchService | None:
     return None
 
 
+def _extract_ocr_snippet(ocr_text: str, query: str, max_len: int = 150) -> str | None:
+    """Extract a short snippet around the first occurrence of *query* in *ocr_text*."""
+    if not ocr_text or not query:
+        return None
+    lower = ocr_text.lower()
+    idx = lower.find(query.lower())
+    if idx == -1:
+        return None
+    start = max(0, idx - 60)
+    end = min(len(ocr_text), idx + len(query) + 60)
+    snippet = ocr_text[start:end].strip()
+    if start > 0:
+        snippet = "..." + snippet
+    if end < len(ocr_text):
+        snippet = snippet + "..."
+    return snippet[:max_len]
+
+
+def _resolve_thumb_url(path: str | None, thumbs_svc: BlobService | None) -> str | None:
+    """Generate a SAS-signed thumbnail URL if possible; fall back to raw path."""
+    if not path:
+        return None
+    if thumbs_svc is not None:
+        try:
+            return thumbs_svc.get_thumbnail_url(path)
+        except Exception:
+            return path
+    return path
+
+
+def _sql_ocr_search(
+    cursor: pyodbc.Cursor,
+    query: str,
+    *,
+    folder_id: int | None = None,
+    top: int = 50,
+    skip: int = 0,
+    thumbs_svc: BlobService | None = None,
+    exclude_image_ids: list[int] | None = None,
+) -> dict[str, Any]:
+    """Search only the OcrText column."""
+    conditions = ["i.OcrText LIKE ?"]
+    params: list[Any] = [f"%{query}%"]
+
+    if folder_id is not None:
+        conditions.append("i.FolderID = ?")
+        params.append(folder_id)
+
+    if exclude_image_ids:
+        placeholders = ",".join("?" for _ in exclude_image_ids)
+        conditions.append(f"i.ImageID NOT IN ({placeholders})")
+        params.extend(exclude_image_ids)
+
+    where = " AND ".join(conditions)
+
+    cursor.execute(f"SELECT COUNT(*) FROM Images i WHERE {where}", *params)
+    total_count: int = cursor.fetchone()[0]
+
+    search_sql = f"""
+        SELECT i.ImageID, i.OriginalFileName, i.ThumbnailPath, i.FolderID,
+               f.FolderName, i.BundleID, i.OcrText
+        FROM Images i
+        JOIN Folders f ON i.FolderID = f.FolderID
+        WHERE {where}
+        ORDER BY i.ImageID
+        OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
+    """
+    cursor.execute(search_sql, *params, skip, top)
+
+    results: list[dict[str, Any]] = []
+    for row in cursor.fetchall():
+        ocr_snippet = _extract_ocr_snippet(row.OcrText, query)
+        results.append({
+            "id": row.ImageID,
+            "type": "image",
+            "file_name": row.OriginalFileName,
+            "thumbnail_url": _resolve_thumb_url(row.ThumbnailPath, thumbs_svc),
+            "folder_name": row.FolderName,
+            "folder_id": row.FolderID,
+            "matched_field": "ocr_text",
+            "matched_value": ocr_snippet or query,
+            "drawing_numbers": [],
+            "keywords": [],
+            "bundle_id": row.BundleID,
+            "page_count": None,
+            "ocr_snippet": ocr_snippet,
+        })
+
+    return {"results": results, "total_count": total_count}
+
+
 def _sql_fallback_search(
     conn: pyodbc.Connection,
     query: str,
@@ -51,6 +142,12 @@ def _sql_fallback_search(
 ) -> dict[str, Any]:
     """Fall back to SQL LIKE when Azure AI Search is not configured."""
     cursor = conn.cursor()
+
+    # OCR-only search: search the OcrText column directly
+    if index_type == "ocr":
+        return _sql_ocr_search(
+            cursor, query, folder_id=folder_id, top=top, skip=skip, thumbs_svc=thumbs_svc,
+        )
 
     conditions = ["ix.IndexValue LIKE ?"]
     params: list[Any] = [f"%{query}%"]
@@ -66,37 +163,22 @@ def _sql_fallback_search(
 
     where = " AND ".join(conditions)
 
-    # Also search OCR text and manual pages
-    ocr_conditions = ["i.OcrText LIKE ?"]
-    ocr_params: list[Any] = [f"%{query}%"]
-    if folder_id is not None:
-        ocr_conditions.append("i.FolderID = ?")
-        ocr_params.append(folder_id)
-    ocr_where = " AND ".join(ocr_conditions)
-
-    # Count total matches (index matches + OCR matches)
+    # Count total matches
     count_sql = f"""
-        SELECT COUNT(*) FROM (
-            SELECT DISTINCT i.ImageID
-            FROM ImageIndexes ix
-            JOIN IndexTypes it ON ix.IndexTypeID = it.IndexTypeID
-            JOIN Images i ON ix.ImageID = i.ImageID
-            WHERE {where}
-            UNION
-            SELECT DISTINCT i.ImageID
-            FROM Images i
-            WHERE {ocr_where}
-        ) combined
+        SELECT COUNT(DISTINCT i.ImageID)
+        FROM ImageIndexes ix
+        JOIN IndexTypes it ON ix.IndexTypeID = it.IndexTypeID
+        JOIN Images i ON ix.ImageID = i.ImageID
+        WHERE {where}
     """
-    all_count_params = params + ocr_params
-    cursor.execute(count_sql, *all_count_params)
+    cursor.execute(count_sql, *params)
     total_count: int = cursor.fetchone()[0]
 
     # Fetch page of results — group by image, aggregate index values
     search_sql = f"""
         SELECT i.ImageID, i.OriginalFileName, i.ThumbnailPath, i.FolderID,
                ix.IndexValue, it.Name AS IndexTypeName,
-               f.FolderName, i.BundleID
+               f.FolderName, i.BundleID, i.OcrText
         FROM ImageIndexes ix
         JOIN IndexTypes it ON ix.IndexTypeID = it.IndexTypeID
         JOIN Images i ON ix.ImageID = i.ImageID
@@ -108,11 +190,11 @@ def _sql_fallback_search(
     cursor.execute(search_sql, *params, skip, top)
 
     results: list[dict[str, Any]] = []
+    seen_ids: list[int] = []
     for row in cursor.fetchall():
         index_type_name = row.IndexTypeName
         matched_field = "drawing_number" if index_type_name == "Drawing #" else "keyword"
 
-        # Collect drawing numbers and keywords for this image
         drawing_numbers: list[str] = []
         keywords: list[str] = []
         if index_type_name == "Drawing #":
@@ -120,22 +202,13 @@ def _sql_fallback_search(
         else:
             keywords.append(row.IndexValue)
 
-        # Generate SAS-signed thumbnail URL if possible; fall back to raw path
-        thumb_url: str | None = None
-        if row.ThumbnailPath:
-            if thumbs_svc is not None:
-                try:
-                    thumb_url = thumbs_svc.get_thumbnail_url(row.ThumbnailPath)
-                except Exception:
-                    thumb_url = row.ThumbnailPath
-            else:
-                thumb_url = row.ThumbnailPath
+        ocr_snippet = _extract_ocr_snippet(row.OcrText, query) if row.OcrText else None
 
         results.append({
             "id": row.ImageID,
             "type": "image",
             "file_name": row.OriginalFileName,
-            "thumbnail_url": thumb_url,
+            "thumbnail_url": _resolve_thumb_url(row.ThumbnailPath, thumbs_svc),
             "folder_name": row.FolderName,
             "folder_id": row.FolderID,
             "matched_field": matched_field,
@@ -144,7 +217,19 @@ def _sql_fallback_search(
             "keywords": keywords,
             "bundle_id": row.BundleID,
             "page_count": None,
+            "ocr_snippet": ocr_snippet,
         })
+        seen_ids.append(row.ImageID)
+
+    # If we have room and no specific type filter, add OCR-only matches
+    remaining = top - len(results)
+    if remaining > 0 and not index_type:
+        ocr_data = _sql_ocr_search(
+            cursor, query, folder_id=folder_id, top=remaining, skip=0,
+            thumbs_svc=thumbs_svc, exclude_image_ids=seen_ids,
+        )
+        results.extend(ocr_data["results"])
+        total_count += ocr_data["total_count"]
 
     return {"results": results, "total_count": total_count}
 

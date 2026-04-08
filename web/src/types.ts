@@ -60,6 +60,7 @@ export interface SearchResult {
   keywords: string[];
   bundle_id: number | null;
   page_count: number | null;
+  ocr_snippet: string | null;
 }
 
 /** Paginated search response. */

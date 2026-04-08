@@ -87,6 +87,7 @@ class SearchResult(BaseModel):
     keywords: list[str] = Field(default_factory=list)
     bundle_id: int | None = None
     page_count: int | None = None
+    ocr_snippet: str | None = None
 
 
 class SearchResponse(BaseModel):

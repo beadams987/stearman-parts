@@ -77,12 +77,19 @@ function ResultCard({ result, query }: { result: SearchResult; query: string }) 
         {/* Matched value */}
         <div className="flex items-center gap-2">
           <span className="text-xs text-slate-400 dark:text-slate-500 font-mono uppercase flex-shrink-0">
-            {result.matched_field === 'drawing_number' ? 'DWG#' : 'KW'}:
+            {result.matched_field === 'drawing_number' ? 'DWG#' : result.matched_field === 'ocr_text' ? 'OCR' : 'KW'}:
           </span>
           <span className="text-sm text-blue-600 dark:text-blue-400 font-mono truncate">
             <HighlightMatch text={result.matched_value} query={query} />
           </span>
         </div>
+
+        {/* OCR snippet */}
+        {result.ocr_snippet && (
+          <p className="text-xs text-slate-500 dark:text-slate-400 italic line-clamp-2">
+            <HighlightMatch text={result.ocr_snippet} query={query} />
+          </p>
+        )}
 
         {/* Tags */}
         <div className="flex flex-wrap gap-1.5">
@@ -121,7 +128,7 @@ function ResultCard({ result, query }: { result: SearchResult; query: string }) 
 export default function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const query = searchParams.get('q') ?? '';
-  const type = searchParams.get('type') as 'drawing_number' | 'keyword' | undefined;
+  const type = searchParams.get('type') as 'drawing_number' | 'keyword' | 'ocr' | undefined;
   const folderIdParam = searchParams.get('folder_id');
   const folderId = folderIdParam ? Number(folderIdParam) : undefined;
   const pageParam = searchParams.get('page');
@@ -199,6 +206,7 @@ export default function SearchPage() {
                 { value: undefined, label: 'All' },
                 { value: 'drawing_number', label: 'Drawing #' },
                 { value: 'keyword', label: 'Key Word' },
+                { value: 'ocr', label: 'Full Text (OCR)' },
               ].map(({ value, label }) => (
                 <button
                   key={label}
@@ -292,7 +300,7 @@ export default function SearchPage() {
           <div className="flex flex-wrap gap-2">
             {type && (
               <span className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-md">
-                {type === 'drawing_number' ? 'Drawing #' : 'Key Word'}
+                {type === 'drawing_number' ? 'Drawing #' : type === 'ocr' ? 'Full Text (OCR)' : 'Key Word'}
                 <button
                   onClick={() => setFilterParam('type', undefined)}
                   className="hover:text-blue-900 dark:hover:text-blue-100 cursor-pointer"
