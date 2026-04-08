@@ -54,7 +54,7 @@ export interface SearchResult {
   thumbnail_url: string;
   folder_name: string;
   folder_id: number;
-  matched_field: 'drawing_number' | 'keyword';
+  matched_field: 'drawing_number' | 'keyword' | 'ocr_text';
   matched_value: string;
   drawing_numbers: string[];
   keywords: string[];

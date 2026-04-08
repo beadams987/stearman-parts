@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { FileText, Download, BookOpen, Eye, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { FileText, Download, BookOpen, Eye, X } from 'lucide-react';
 import { usePageMeta } from '../hooks/usePageMeta.ts';
 import apiClient from '../api/client.ts';
 
