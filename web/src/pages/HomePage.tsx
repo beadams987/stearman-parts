@@ -10,6 +10,7 @@ import {
   Calendar,
   MapPin,
   ExternalLink,
+  Plane,
 } from 'lucide-react';
 import { useStats } from '../api/hooks.ts';
 import apiClient from '../api/client.ts';
@@ -123,6 +124,67 @@ function UpcomingEvents() {
   );
 }
 
+interface RegistryPreview {
+  n_number: string;
+  model: string;
+  owner_name: string;
+  city: string;
+  state: string;
+}
+
+function RecentOwners() {
+  const navigate = useNavigate();
+  const [owners, setOwners] = useState<RegistryPreview[]>([]);
+
+  useEffect(() => {
+    apiClient
+      .get<{ entries: RegistryPreview[] }>('/registry', { params: { page_size: 6 } })
+      .then((res: { data: { entries: RegistryPreview[]; total: number } }) => {
+        setOwners(res.data.entries.slice(0, 6));
+      })
+      .catch(() => setOwners([]));
+  }, []);
+
+  if (owners.length === 0) return null;
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+          <Plane className="w-5 h-5 text-emerald-500" />
+          Registered Stearmans
+        </h2>
+        <button
+          onClick={() => navigate('/registry')}
+          className="text-sm text-amber-700 dark:text-amber-400 hover:underline flex items-center gap-1 cursor-pointer"
+        >
+          Full directory <ArrowRight className="w-3.5 h-3.5" />
+        </button>
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+        {owners.map((o) => (
+          <a
+            key={o.n_number}
+            href={`https://registry.faa.gov/AircraftInquiry/Search/NNumberResult?nNumberTxt=${o.n_number.replace('N', '')}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p-3 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700
+              hover:border-amber-300 dark:hover:border-amber-600 transition-all duration-200 no-underline group"
+          >
+            <p className="text-sm font-mono font-bold text-amber-700 dark:text-amber-400 group-hover:underline">
+              {o.n_number}
+            </p>
+            <p className="text-xs text-slate-600 dark:text-slate-400 truncate mt-0.5">{o.model}</p>
+            <p className="text-xs text-slate-400 dark:text-slate-500 truncate">
+              {o.city}{o.state ? `, ${o.state}` : ''}
+            </p>
+          </a>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function HomePage() {
   const navigate = useNavigate();
   const { data: stats } = useStats();
@@ -194,6 +256,9 @@ export default function HomePage() {
 
       {/* Upcoming Events Preview */}
       <UpcomingEvents />
+
+      {/* Recent Registrations */}
+      <RecentOwners />
 
       {/* Stearman Resources / Partners */}
       <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">

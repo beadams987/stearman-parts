@@ -1,5 +1,5 @@
-import { useEffect, useState, useMemo } from 'react';
-import { Search, MapPin, Plane, ExternalLink, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Search, MapPin, Plane, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react';
 import { usePageMeta } from '../hooks/usePageMeta.ts';
 import apiClient from '../api/client.ts';
 
@@ -53,9 +53,16 @@ export default function RegistryPage() {
   // Debounce search
   const [searchInput, setSearchInput] = useState('');
   useEffect(() => {
-    const timer = setTimeout(() => { setSearch(searchInput); setPage(1); }, 400);
+    const timer = setTimeout(() => {
+      setSearch(searchInput);
+    }, 400);
     return () => clearTimeout(timer);
   }, [searchInput]);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [search, stateFilter, modelFilter]);
 
   const totalPages = Math.ceil((data?.total ?? 0) / pageSize);
 
@@ -94,7 +101,7 @@ export default function RegistryPage() {
         <div className="flex flex-wrap gap-2 justify-center">
           <select
             value={stateFilter}
-            onChange={(e) => { setStateFilter(e.target.value); setPage(1); }}
+            onChange={(e) => setStateFilter(e.target.value)}
             className="px-3 py-1.5 text-xs rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-0 cursor-pointer"
           >
             <option value="">All States</option>
@@ -103,7 +110,7 @@ export default function RegistryPage() {
 
           <select
             value={modelFilter}
-            onChange={(e) => { setModelFilter(e.target.value); setPage(1); }}
+            onChange={(e) => setModelFilter(e.target.value)}
             className="px-3 py-1.5 text-xs rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-0 cursor-pointer"
           >
             <option value="">All Models</option>
@@ -112,7 +119,7 @@ export default function RegistryPage() {
 
           {(stateFilter || modelFilter || search) && (
             <button
-              onClick={() => { setStateFilter(''); setModelFilter(''); setSearchInput(''); setSearch(''); setPage(1); }}
+              onClick={() => { setStateFilter(''); setModelFilter(''); setSearchInput(''); setSearch(''); }}
               className="px-3 py-1.5 text-xs rounded-full bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 cursor-pointer"
             >
               Clear filters
