@@ -1,4 +1,4 @@
-"""Manual PDF library — list, search, and page-level access."""
+"""Manuals Library API — browse, search, filter, and view the full catalog."""
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, Field
 
+from app.catalog import ALL_ITEMS, CATEGORIES, ITEMS_BY_ID, CatalogItem
 from app.config import Settings, get_settings
 from app.database import get_db
 from app.services.blob_service import BlobService
@@ -19,21 +20,28 @@ router = APIRouter(prefix="/api/manuals", tags=["manuals"])
 GOOGLE_VIEWER = "https://docs.google.com/viewer?url={url}&embedded=true"
 
 
-# ── Models ────────────────────────────────────────────────────────────
+# ── Response Models ───────────────────────────────────────────────────
 
-class ManualInfo(BaseModel):
+class CatalogItemResponse(BaseModel):
     id: str
     title: str
     description: str
     category: str
-    filename: str
-    size_mb: int
-    page_count: int = 0
-
-
-class ManualWithUrls(ManualInfo):
+    subcategory: str
+    content_type: str
+    size_mb: float
+    tags: list[str]
+    source: str
+    year: int | None
+    models: list[str]
     download_url: str
     view_url: str
+
+
+class CatalogResponse(BaseModel):
+    items: list[CatalogItemResponse] = Field(default_factory=list)
+    total: int = 0
+    categories: list[str] = Field(default_factory=list)
 
 
 class ManualPageResult(BaseModel):
@@ -50,43 +58,15 @@ class ManualSearchResponse(BaseModel):
     query: str = ""
 
 
-# ── Manual Catalog ────────────────────────────────────────────────────
-
-MANUALS: list[ManualInfo] = [
-    ManualInfo(
-        id="erection-maintenance",
-        title="Erection & Maintenance Instructions",
-        description="Complete erection, rigging, and maintenance procedures for Army Model PT-13D and Navy Model N2S-5 aircraft.",
-        category="Maintenance",
-        filename="Stearman_Erection_and_Maintenance_Instructions_PT-13D_N2S-5.pdf",
-        size_mb=23,
-        page_count=0,
-    ),
-    ManualInfo(
-        id="parts-catalog",
-        title="Parts Catalog",
-        description="Illustrated parts breakdown and part number reference for Army Model PT-13D and Navy Model N2S-5 aircraft.",
-        category="Parts",
-        filename="Stearman_Parts_Catalog_PT-13D_N2S-5.pdf",
-        size_mb=149,
-        page_count=0,
-    ),
-]
-
-_MANUALS_BY_ID = {m.id: m for m in MANUALS}
-
-
 # ── Helpers ───────────────────────────────────────────────────────────
 
-def _get_blob_service(settings: Settings) -> BlobService:
-    return BlobService(
-        settings.AZURE_BLOB_CONNECTION_STRING,
-        settings.BLOB_MANUALS_CONTAINER_NAME,
-    )
+def _get_blob_service(settings: Settings, container: str) -> BlobService:
+    return BlobService(settings.AZURE_BLOB_CONNECTION_STRING, container)
 
 
-def _make_sas_url(settings: Settings, filename: str) -> str:
-    return _get_blob_service(settings).get_blob_url(filename, expiry_hours=2)
+def _make_sas_url(settings: Settings, item: CatalogItem) -> str:
+    svc = _get_blob_service(settings, item.container)
+    return svc.get_blob_url(item.blob_path, expiry_hours=2)
 
 
 def _make_view_url(sas_url: str, page: int | None = None) -> str:
@@ -97,17 +77,16 @@ def _make_view_url(sas_url: str, page: int | None = None) -> str:
     return url
 
 
-def _enrich_manual(manual: ManualInfo, settings: Settings) -> ManualWithUrls:
-    sas_url = _make_sas_url(settings, manual.filename)
-    return ManualWithUrls(
-        **manual.model_dump(),
+def _enrich_item(item: CatalogItem, settings: Settings) -> CatalogItemResponse:
+    sas_url = _make_sas_url(settings, item)
+    return CatalogItemResponse(
+        **item.model_dump(),
         download_url=sas_url,
         view_url=_make_view_url(sas_url),
     )
 
 
 def _snippet(text: str, query: str, context_chars: int = 120) -> str:
-    """Extract a snippet around the first query match in text."""
     lower = text.lower()
     idx = lower.find(query.lower())
     if idx < 0:
@@ -124,22 +103,55 @@ def _snippet(text: str, query: str, context_chars: int = 120) -> str:
 
 # ── Endpoints ─────────────────────────────────────────────────────────
 
-@router.get("", response_model=list[ManualWithUrls])
-async def list_manuals(
+@router.get("", response_model=CatalogResponse)
+async def list_catalog(
     settings: Annotated[Settings, Depends(get_settings)],
     category: str | None = Query(default=None, description="Filter by category"),
-) -> list[ManualWithUrls]:
-    """Return all manuals with download and viewer URLs."""
-    manuals = MANUALS
+    model: str | None = Query(default=None, description="Filter by aircraft model (e.g. PT-17)"),
+    tag: str | None = Query(default=None, description="Filter by tag"),
+    q: str | None = Query(default=None, description="Text search in title/description"),
+) -> CatalogResponse:
+    """Return the full content catalog with optional filters."""
+    items = ALL_ITEMS
+
     if category:
-        manuals = [m for m in manuals if m.category.lower() == category.lower()]
-    return [_enrich_manual(m, settings) for m in manuals]
+        items = [i for i in items if i.category.lower() == category.lower()]
+    if model:
+        m = model.upper()
+        items = [i for i in items if any(m in mod.upper() for mod in i.models)]
+    if tag:
+        t = tag.lower()
+        items = [i for i in items if any(t in tg.lower() for tg in i.tags)]
+    if q:
+        ql = q.lower()
+        items = [i for i in items if ql in i.title.lower() or ql in i.description.lower()]
+
+    enriched = [_enrich_item(i, settings) for i in items]
+    return CatalogResponse(items=enriched, total=len(enriched), categories=CATEGORIES)
 
 
 @router.get("/categories", response_model=list[str])
 async def list_categories() -> list[str]:
-    """Return distinct manual categories."""
-    return sorted(set(m.category for m in MANUALS))
+    """Return distinct content categories."""
+    return CATEGORIES
+
+
+@router.get("/models", response_model=list[str])
+async def list_models() -> list[str]:
+    """Return distinct aircraft models referenced across the catalog."""
+    models = set()
+    for item in ALL_ITEMS:
+        models.update(item.models)
+    return sorted(models)
+
+
+@router.get("/tags", response_model=list[str])
+async def list_tags() -> list[str]:
+    """Return all distinct tags across the catalog."""
+    tags = set()
+    for item in ALL_ITEMS:
+        tags.update(item.tags)
+    return sorted(tags)
 
 
 @router.get("/search", response_model=ManualSearchResponse)
@@ -150,10 +162,9 @@ async def search_manuals(
     manual_id: str | None = Query(default=None, description="Limit to specific manual"),
     page_size: int = Query(default=20, ge=1, le=100),
 ) -> ManualSearchResponse:
-    """Search within manual page text. Returns matching pages with snippets."""
+    """Full-text search within manual page content."""
     cursor = conn.cursor()
 
-    # Check if ManualPages table exists
     cursor.execute("""
         SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES
         WHERE TABLE_NAME = 'ManualPages'
@@ -163,51 +174,40 @@ async def search_manuals(
 
     conditions = ["mp.PageText LIKE ?"]
     params: list = [f"%{q}%"]
-
     if manual_id:
         conditions.append("mp.ManualID LIKE ?")
         params.append(f"%{manual_id}%")
-
     where = " AND ".join(conditions)
 
-    # Count total matches
     cursor.execute(f"SELECT COUNT(*) FROM ManualPages mp WHERE {where}", *params)
     total: int = cursor.fetchone()[0]
 
-    # Fetch results
     cursor.execute(
-        f"""
-        SELECT mp.ManualID, mp.PageNumber, mp.PageText
-        FROM ManualPages mp
-        WHERE {where}
-        ORDER BY mp.ManualID, mp.PageNumber
-        OFFSET 0 ROWS FETCH NEXT ? ROWS ONLY
-        """,
-        *params,
-        page_size,
+        f"""SELECT mp.ManualID, mp.PageNumber, mp.PageText
+            FROM ManualPages mp WHERE {where}
+            ORDER BY mp.ManualID, mp.PageNumber
+            OFFSET 0 ROWS FETCH NEXT ? ROWS ONLY""",
+        *params, page_size,
     )
 
     results: list[ManualPageResult] = []
     for row in cursor.fetchall():
-        # Find the manual metadata
-        # ManualID in DB is filename-based; match against catalog
-        manual = None
-        for m in MANUALS:
-            if m.id in row.ManualID.lower() or row.ManualID in m.filename:
-                manual = m
+        item = None
+        for i in ALL_ITEMS:
+            if i.id in row.ManualID.lower() or row.ManualID in i.blob_path:
+                item = i
                 break
-        manual_title = manual.title if manual else row.ManualID
+        title = item.title if item else row.ManualID
 
-        # Build viewer URL with page number
-        if manual:
-            sas_url = _make_sas_url(settings, manual.filename)
+        if item:
+            sas_url = _make_sas_url(settings, item)
             view_url = _make_view_url(sas_url, page=row.PageNumber)
         else:
             view_url = ""
 
         results.append(ManualPageResult(
             manual_id=row.ManualID,
-            manual_title=manual_title,
+            manual_title=title,
             page_number=row.PageNumber,
             snippet=_snippet(row.PageText, q),
             view_url=view_url,
@@ -216,35 +216,28 @@ async def search_manuals(
     return ManualSearchResponse(results=results, total=total, query=q)
 
 
-@router.get("/{manual_id}/download")
-async def download_manual(
-    manual_id: str,
+@router.get("/{item_id}/download")
+async def download_item(
+    item_id: str,
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> RedirectResponse:
-    """Redirect to a time-limited SAS URL for the manual PDF."""
-    manual = _MANUALS_BY_ID.get(manual_id)
-    if not manual:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Manual '{manual_id}' not found",
-        )
-    url = _make_sas_url(settings, manual.filename)
+    """Redirect to a time-limited SAS URL for download."""
+    item = ITEMS_BY_ID.get(item_id)
+    if not item:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
+    url = _make_sas_url(settings, item)
     return RedirectResponse(url=url, status_code=status.HTTP_302_FOUND)
 
 
-@router.get("/{manual_id}/view")
-async def view_manual(
-    manual_id: str,
+@router.get("/{item_id}/view")
+async def view_item(
+    item_id: str,
     settings: Annotated[Settings, Depends(get_settings)],
-    page: int | None = Query(default=None, description="Jump to page number"),
+    page: int | None = Query(default=None, description="Jump to page"),
 ) -> RedirectResponse:
-    """Redirect to Google Docs Viewer for inline PDF viewing."""
-    manual = _MANUALS_BY_ID.get(manual_id)
-    if not manual:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Manual '{manual_id}' not found",
-        )
-    sas_url = _make_sas_url(settings, manual.filename)
-    view_url = _make_view_url(sas_url, page=page)
-    return RedirectResponse(url=view_url, status_code=status.HTTP_302_FOUND)
+    """Redirect to Google Docs Viewer for inline viewing."""
+    item = ITEMS_BY_ID.get(item_id)
+    if not item:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
+    sas_url = _make_sas_url(settings, item)
+    return RedirectResponse(url=_make_view_url(sas_url, page=page), status_code=status.HTTP_302_FOUND)

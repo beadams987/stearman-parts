@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     BLOB_RENDERS_CONTAINER_NAME: str = "renders"
     BLOB_MANUALS_CONTAINER_NAME: str = "manuals"
     BLOB_SUBMISSIONS_CONTAINER_NAME: str = "submissions"
+    BLOB_REFERENCE_ARCHIVE_CONTAINER_NAME: str = "reference-archive"
 
     # Submissions security
     SUBMISSIONS_MAX_FILE_SIZE_MB: int = 50
@@ -41,6 +42,9 @@ class Settings(BaseSettings):
     AZURE_SUBSCRIPTION_ID: str = ""
     AZURE_RESOURCE_GROUP: str = ""
     AZURE_FUNCTION_APP_NAME: str = ""
+
+    # Site
+    SITE_BASE_URL: str = "https://stearmanparts.com"
 
     # CORS — defaults to * for production; override for stricter local dev
     CORS_ORIGINS: str = "*"
