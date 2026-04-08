@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { FileText, Download, BookOpen } from 'lucide-react';
-import { apiClient } from '../api/client.ts';
+import apiClient from '../api/client.ts';
 
 interface Manual {
   id: string;
@@ -16,8 +16,8 @@ export default function ManualsPage() {
 
   useEffect(() => {
     apiClient
-      .get<Manual[]>('/api/manuals')
-      .then((res) => setManuals(res.data))
+      .get<Manual[]>('/manuals')
+      .then((res: { data: Manual[] }) => setManuals(res.data))
       .catch(() => {
         // Fallback to hardcoded if API is unreachable
         setManuals([
