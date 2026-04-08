@@ -1,4 +1,4 @@
-"""Manual PDF download endpoints."""
+"""Manual PDF download and viewing endpoints."""
 
 from __future__ import annotations
 
@@ -22,6 +22,12 @@ class ManualInfo(BaseModel):
     size_mb: int
 
 
+class ManualWithUrls(ManualInfo):
+    """Manual info enriched with time-limited access URLs."""
+    download_url: str
+    view_url: str
+
+
 # Hardcoded manual catalog — expand as new PDFs are added
 MANUALS: list[ManualInfo] = [
     ManualInfo(
@@ -42,6 +48,8 @@ MANUALS: list[ManualInfo] = [
 
 _MANUALS_BY_ID = {m.id: m for m in MANUALS}
 
+GOOGLE_VIEWER = "https://docs.google.com/viewer?url={url}&embedded=true"
+
 
 def _get_manuals_blob_service(settings: Settings) -> BlobService:
     return BlobService(
@@ -50,10 +58,27 @@ def _get_manuals_blob_service(settings: Settings) -> BlobService:
     )
 
 
-@router.get("", response_model=list[ManualInfo])
-async def list_manuals() -> list[ManualInfo]:
-    """Return the list of available PDF manuals."""
-    return MANUALS
+def _enrich_manual(manual: ManualInfo, settings: Settings) -> ManualWithUrls:
+    """Add SAS-signed download URL and Google Docs viewer URL."""
+    blob_service = _get_manuals_blob_service(settings)
+    sas_url = blob_service.get_blob_url(manual.filename, expiry_hours=2)
+
+    import urllib.parse
+    view_url = GOOGLE_VIEWER.format(url=urllib.parse.quote(sas_url, safe=""))
+
+    return ManualWithUrls(
+        **manual.model_dump(),
+        download_url=sas_url,
+        view_url=view_url,
+    )
+
+
+@router.get("", response_model=list[ManualWithUrls])
+async def list_manuals(
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> list[ManualWithUrls]:
+    """Return manuals with time-limited download and viewer URLs."""
+    return [_enrich_manual(m, settings) for m in MANUALS]
 
 
 @router.get("/{manual_id}/download")

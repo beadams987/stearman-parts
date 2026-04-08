@@ -9,6 +9,8 @@ interface Manual {
   description: string;
   filename: string;
   size_mb: number;
+  download_url: string;
+  view_url: string;
 }
 
 export default function ManualsPage() {
@@ -25,31 +27,9 @@ export default function ManualsPage() {
     apiClient
       .get<Manual[]>('/manuals')
       .then((res: { data: Manual[] }) => setManuals(res.data))
-      .catch(() => {
-        setManuals([
-          {
-            id: 'erection-maintenance',
-            title: 'Erection & Maintenance Instructions',
-            description: 'Army Model PT-13D and Navy Model N2S-5',
-            filename: '',
-            size_mb: 23,
-          },
-          {
-            id: 'parts-catalog',
-            title: 'Parts Catalog',
-            description: 'Army Model PT-13D and Navy Model N2S-5',
-            filename: '',
-            size_mb: 149,
-          },
-        ]);
-      })
+      .catch(() => setManuals([]))
       .finally(() => setLoading(false));
   }, []);
-
-  const apiBase = import.meta.env.VITE_API_URL || '';
-
-  const getDownloadUrl = (manual: Manual) =>
-    `${apiBase}/manuals/${manual.id}/download`;
 
   return (
     <div className="max-w-5xl mx-auto space-y-8 py-8 px-4">
@@ -109,7 +89,7 @@ export default function ManualsPage() {
                   View Online
                 </button>
                 <a
-                  href={getDownloadUrl(manual)}
+                  href={manual.download_url}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg
@@ -131,7 +111,7 @@ export default function ManualsPage() {
         </p>
       </div>
 
-      {/* Full-screen PDF Viewer Modal */}
+      {/* Google Docs PDF Viewer Modal */}
       {viewingManual && (
         <div className="fixed inset-0 z-50 bg-black/80 flex flex-col">
           {/* Viewer header */}
@@ -145,7 +125,7 @@ export default function ManualsPage() {
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
               <a
-                href={getDownloadUrl(viewingManual)}
+                href={viewingManual.download_url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg
@@ -164,13 +144,20 @@ export default function ManualsPage() {
             </div>
           </div>
 
-          {/* PDF embed */}
-          <div className="flex-1 bg-slate-800">
+          {/* Google Docs Viewer iframe */}
+          <div className="flex-1 bg-slate-800 relative">
             <iframe
-              src={`${getDownloadUrl(viewingManual)}#toolbar=1&navpanes=1&scrollbar=1&view=FitH`}
+              src={viewingManual.view_url}
               className="w-full h-full border-0"
               title={viewingManual.title}
+              sandbox="allow-scripts allow-same-origin allow-popups"
             />
+            {/* Loading indicator */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="bg-slate-900/70 rounded-lg px-4 py-3 text-slate-300 text-sm animate-pulse">
+                Loading document...
+              </div>
+            </div>
           </div>
         </div>
       )}
