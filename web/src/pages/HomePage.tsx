@@ -111,6 +111,34 @@ export default function HomePage() {
         </div>
       )}
 
+      {/* Stearman Resources / Partners */}
+      <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
+        <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4 text-center">
+          Stearman Resources
+        </h2>
+        <a
+          href="https://yesteryearaviation.com/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex flex-col sm:flex-row items-center gap-4 p-4 rounded-lg
+            hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors duration-200 no-underline"
+        >
+          <img
+            src="/yesteryear-logo.jpg"
+            alt="Yesteryear Aviation"
+            className="h-16 sm:h-12 w-auto object-contain"
+          />
+          <div className="text-center sm:text-left">
+            <p className="text-sm font-medium text-slate-700 dark:text-slate-200">
+              Yesteryear Aviation
+            </p>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+              Check Yesteryear Aviation for FAA-PMA, New Surplus and As Removed Stearman Parts.
+            </p>
+          </div>
+        </a>
+      </div>
+
       {/* Footer note */}
       <div className="text-center text-xs text-slate-400 dark:text-slate-500 pb-4">
         <p>

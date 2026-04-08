@@ -9,6 +9,7 @@ import FolderPage from './pages/FolderPage.tsx';
 import ImagePage from './pages/ImagePage.tsx';
 import BundlePage from './pages/BundlePage.tsx';
 import SearchPage from './pages/SearchPage.tsx';
+import ManualsPage from './pages/ManualsPage.tsx';
 
 function useDarkMode() {
   const [darkMode, setDarkMode] = useState(() => {
@@ -99,6 +100,7 @@ export default function App() {
             <Route path="/images/:id" element={<ImagePage />} />
             <Route path="/bundles/:id" element={<BundlePage />} />
             <Route path="/search" element={<SearchPage />} />
+            <Route path="/manuals" element={<ManualsPage />} />
           </Routes>
         </main>
       </div>

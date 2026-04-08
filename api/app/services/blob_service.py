@@ -58,6 +58,10 @@ class BlobService:
         """
         return self._generate_sas_url(blob_path, expiry_hours=1)
 
+    def get_blob_url(self, blob_path: str, expiry_hours: int = 1) -> str:
+        """Return a time-limited SAS URL for any blob in this container."""
+        return self._generate_sas_url(blob_path, expiry_hours=expiry_hours)
+
     def get_render_url(self, blob_path: str) -> str:
         """Return a time-limited SAS URL for a pre-rendered JPEG in the renders container.
 

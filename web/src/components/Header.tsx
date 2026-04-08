@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@workos-inc/authkit-react';
-import { Moon, Sun, Menu, LogOut, LogIn, UserPlus } from 'lucide-react';
+import { Moon, Sun, Menu, LogOut, LogIn, UserPlus, BookOpen } from 'lucide-react';
 import SearchBar from './SearchBar.tsx';
 
 interface HeaderProps {
@@ -54,6 +54,18 @@ export default function Header({ darkMode, onToggleDarkMode, onToggleSidebar }: 
             </p>
           </div>
         </Link>
+
+        {/* Nav links */}
+        <nav className="hidden md:flex items-center gap-1 ml-4">
+          <Link
+            to="/manuals"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md
+              text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 no-underline"
+          >
+            <BookOpen className="w-4 h-4" />
+            Manuals
+          </Link>
+        </nav>
 
         {/* Search bar - center */}
         <div className="flex-1 hidden md:flex justify-center px-4">

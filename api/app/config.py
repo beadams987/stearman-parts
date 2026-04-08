@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     BLOB_CONTAINER_NAME: str = "images"
     BLOB_THUMBS_CONTAINER_NAME: str = "thumbnails"
     BLOB_RENDERS_CONTAINER_NAME: str = "renders"
+    BLOB_MANUALS_CONTAINER_NAME: str = "manuals"
 
     # Azure AI Search
     AZURE_SEARCH_ENDPOINT: str = ""
