@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { usePageMeta } from '../hooks/usePageMeta.ts';
 import apiClient from '../api/client.ts';
+import PdfViewer from '../components/PdfViewer.tsx';
 
 interface CatalogItem {
   id: string;
@@ -19,7 +20,6 @@ interface CatalogItem {
   year: number | null;
   models: string[];
   download_url: string;
-  view_url: string;
 }
 
 interface CatalogResponse {
@@ -33,7 +33,6 @@ interface ManualPageResult {
   manual_title: string;
   page_number: number;
   snippet: string;
-  view_url: string;
 }
 
 interface ManualSearchResponse {
@@ -46,7 +45,6 @@ export default function ManualsPage() {
   const [catalog, setCatalog] = useState<CatalogResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [viewingItem, setViewingItem] = useState<CatalogItem | null>(null);
-  const [viewerUrl, setViewerUrl] = useState('');
 
   // Filters
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
@@ -126,9 +124,8 @@ export default function ManualsPage() {
     return groups;
   }, [filteredItems]);
 
-  const openViewer = useCallback((item: CatalogItem, url?: string) => {
+  const openViewer = useCallback((item: CatalogItem) => {
     setViewingItem(item);
-    setViewerUrl(url || item.view_url);
   }, []);
 
   const openSearchResult = useCallback((result: ManualPageResult, idx: number) => {
@@ -137,7 +134,7 @@ export default function ManualsPage() {
       i.id === result.manual_id ||
       result.manual_id.includes(i.id),
     );
-    if (item) openViewer(item, result.view_url);
+    if (item) openViewer(item);
   }, [items, openViewer]);
 
   const navigateMatch = useCallback((dir: 'prev' | 'next') => {
@@ -148,7 +145,7 @@ export default function ManualsPage() {
     setCurrentMatchIdx(newIdx);
     const r = searchResults[newIdx];
     const item = items.find((i) => i.id === r.manual_id || r.manual_id.includes(i.id));
-    if (item) { setViewingItem(item); setViewerUrl(r.view_url); }
+    if (item) { setViewingItem(item); }
   }, [searchResults, currentMatchIdx, items]);
 
   const highlightSnippet = useCallback((text: string) => {
@@ -184,7 +181,7 @@ export default function ManualsPage() {
               </div>
             )}
             <a href={viewingItem.download_url} target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-amber-600 text-white hover:bg-amber-700">
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700">
               <Download className="w-4 h-4" /><span className="hidden sm:inline">Download</span>
             </a>
             <button onClick={() => setViewingItem(null)}
@@ -193,10 +190,7 @@ export default function ManualsPage() {
             </button>
           </div>
         </div>
-        <div className="flex-1 bg-slate-800">
-          <iframe src={viewerUrl} className="w-full h-full border-0" title={viewingItem.title}
-            sandbox="allow-scripts allow-same-origin allow-popups" />
-        </div>
+        <PdfViewer url={viewingItem.download_url} />
       </div>
     );
   }
@@ -301,14 +295,14 @@ export default function ManualsPage() {
           <span className="text-xs text-slate-500">Model:</span>
           <button onClick={() => setActiveModel(null)}
             className={`px-2.5 py-1 text-xs rounded-full cursor-pointer ${
-              !activeModel ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-200'
+              !activeModel ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200'
                 : 'bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200'}`}>
             All
           </button>
           {allModels.map((m) => (
             <button key={m} onClick={() => setActiveModel(m === activeModel ? null : m)}
               className={`px-2.5 py-1 text-xs rounded-full cursor-pointer ${
-                activeModel === m ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-200'
+                activeModel === m ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200'
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200'}`}>
               {m}
             </button>
@@ -348,7 +342,7 @@ export default function ManualsPage() {
                           </p>
                           <div className="flex flex-wrap gap-1.5 mt-2">
                             {item.models.map((m) => (
-                              <span key={m} className="text-[10px] px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 font-medium">
+                              <span key={m} className="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-medium">
                                 {m}
                               </span>
                             ))}
@@ -367,13 +361,13 @@ export default function ManualsPage() {
                     <div className="flex items-center gap-2 px-5 py-3 border-t border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/30">
                       <button onClick={() => openViewer(item)}
                         className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg
-                          border border-amber-600 text-amber-700 dark:border-amber-400 dark:text-amber-400
-                          hover:bg-amber-50 dark:hover:bg-amber-900/20 cursor-pointer">
+                          border border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400
+                          hover:bg-blue-50 dark:hover:bg-blue-900/20 cursor-pointer">
                         <Eye className="w-3.5 h-3.5" /> View
                       </button>
                       <a href={item.download_url} target="_blank" rel="noopener noreferrer"
                         className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg
-                          bg-amber-600 text-white hover:bg-amber-700">
+                          bg-blue-600 text-white hover:bg-blue-700">
                         <Download className="w-3.5 h-3.5" /> Download
                       </a>
                     </div>
@@ -388,7 +382,7 @@ export default function ManualsPage() {
       {/* Footer */}
       <div className="text-center text-xs text-slate-400 dark:text-slate-500 pb-4 space-y-1">
         <p>Public domain documents sourced from stearman-aero.com, FAA, NTSB, Internet Archive, and community contributors.</p>
-        <p>Have a manual to contribute? <a href="/submit" className="text-amber-600 hover:underline">Submit it here</a>.</p>
+        <p>Have a manual to contribute? <a href="/submit" className="text-blue-500 hover:underline">Submit it here</a>.</p>
       </div>
     </div>
   );
