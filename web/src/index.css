@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* N401DB-inspired color system — Stearman Yellow + Crimson Red + Charcoal */
 :root {
   --color-primary: #C87A10;
