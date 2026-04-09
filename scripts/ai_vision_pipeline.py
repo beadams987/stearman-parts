@@ -226,8 +226,18 @@ def process_images(args: argparse.Namespace) -> None:
             time.sleep(REQUEST_INTERVAL - elapsed)
 
         try:
-            # Download render
-            blob_data = container.download_blob(render_path).readall()
+            # Download render (with retry on timeout)
+            blob_data = None
+            for _dl_attempt in range(3):
+                try:
+                    blob_data = container.download_blob(render_path, timeout=90).readall()
+                    break
+                except Exception as _dl_err:
+                    if _dl_attempt < 2:
+                        log.warning("Blob download attempt %d failed: %s, retrying...", _dl_attempt + 1, _dl_err)
+                        time.sleep(5 * (_dl_attempt + 1))
+                    else:
+                        raise
             if len(blob_data) < 1000:
                 log.warning("Image %d too small (%d bytes), skipping", image_id, len(blob_data))
                 skipped += 1
