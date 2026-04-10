@@ -143,7 +143,7 @@ def call_gemini_vision(image_data: bytes, api_key: str) -> str:
 
     for attempt in range(3):
         try:
-            resp = json.loads(urllib.request.urlopen(req, timeout=60).read())
+            resp = json.loads(urllib.request.urlopen(req, timeout=180).read())
             text = resp["candidates"][0]["content"]["parts"][0]["text"]
             return text.strip()
         except urllib.error.HTTPError as e:
@@ -191,14 +191,14 @@ def process_images(args: argparse.Namespace) -> None:
         FROM Images i
         WHERE (i.AiDescription IS NULL OR i.AiDescription = '')
           AND i.RenderPath IS NOT NULL
-          AND i.ImageID > ?
+          -- AND i.ImageID > ? -- REMOVED: was skipping missed images below checkpoint
           AND NOT EXISTS (
               SELECT 1 FROM ProcessingLog p
               WHERE p.EntityType = 'image' AND p.EntityID = CAST(i.ImageID AS NVARCHAR)
                 AND p.ProcessType = 'ai_vision' AND p.Status = 'completed'
           )
         ORDER BY i.ImageID
-    """, start_from)
+    """)
 
     rows = cursor.fetchall()
     total = len(rows)
@@ -230,7 +230,7 @@ def process_images(args: argparse.Namespace) -> None:
             blob_data = None
             for _dl_attempt in range(3):
                 try:
-                    blob_data = container.download_blob(render_path, timeout=90).readall()
+                    blob_data = container.download_blob(render_path, timeout=300).readall()
                     break
                 except Exception as _dl_err:
                     if _dl_attempt < 2:
