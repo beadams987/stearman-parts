@@ -29,6 +29,7 @@ export interface ImageDetail extends Image {
   render_url: string | null;
 
   notes: string | null;
+  ai_description: string | null;
   folder_name: string;
   folder_path: Folder[];
   related_images: Image[];

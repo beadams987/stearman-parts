@@ -87,6 +87,19 @@ export default function ImagePage() {
         }}
       />
 
+      {/* AI Description */}
+      {image.ai_description && (
+        <div className="mt-6 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800 rounded-xl p-5">
+          <h2 className="text-sm font-semibold text-amber-800 dark:text-amber-300 mb-2 flex items-center gap-2">
+            <span className="w-5 h-5 bg-amber-200 dark:bg-amber-800 rounded-full flex items-center justify-center text-[10px]">AI</span>
+            Drawing Analysis
+          </h2>
+          <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-line">
+            {image.ai_description}
+          </p>
+        </div>
+      )}
+
       {/* Related images */}
       {image.related_images && image.related_images.length > 0 && (
         <div className="mt-8">

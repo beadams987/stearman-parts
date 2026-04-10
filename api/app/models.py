@@ -48,6 +48,7 @@ class ImageDetailResponse(ImageResponse):
     render_url: str | None = None  # JPEG conversion endpoint for browser viewing
     dzi_url: str | None = None
     notes: str | None = None
+    ai_description: str | None = None
     folder_name: str | None = None
     folder_path: list[FolderBreadcrumb] = Field(default_factory=list)
     related_images: list[ImageResponse] = Field(default_factory=list)

@@ -76,7 +76,7 @@ async def get_image(
                i.ImagePosition, i.OriginalFileName, i.ThumbnailPath,
                i.BlobPath, i.ImageWidth, i.ImageHeight,
                i.Notes, i.SourceDiscNumber, i.SourceImageID, i.CreatedAt,
-               i.RenderPath
+               i.RenderPath, i.AiDescription
         FROM Images i
         WHERE i.ImageID = ?
         """,
@@ -202,6 +202,7 @@ async def get_image(
         # source_disc removed from API response — internal provenance only
         source_image_id=row.SourceImageID,
         created_at=row.CreatedAt,
+        ai_description=row.AiDescription,
     )
 
 
