@@ -28,7 +28,7 @@ from catalog import ALL_ITEMS, CATEGORIES
 
 
 OUTPUT_DIR = Path(__file__).parent.parent / "web" / "public" / "seo"
-SITE_URL = os.environ.get("SITE_BASE_URL", "https://stearmanparts.com")
+SITE_URL = os.environ.get("SITE_BASE_URL", "https://stearmanhq.com")
 
 
 def get_db():

@@ -44,7 +44,7 @@ class Settings(BaseSettings):
     AZURE_FUNCTION_APP_NAME: str = ""
 
     # Site
-    SITE_BASE_URL: str = "https://stearmanparts.com"
+    SITE_BASE_URL: str = "https://stearmanhq.com"
 
     # CORS — defaults to * for production; override for stricter local dev
     CORS_ORIGINS: str = "*"

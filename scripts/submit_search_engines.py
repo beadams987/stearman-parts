@@ -13,7 +13,7 @@ from __future__ import annotations
 import urllib.request
 import urllib.error
 
-SITEMAP_URL = "https://stearmanparts.com/sitemap.xml"
+SITEMAP_URL = "https://stearmanhq.com/sitemap.xml"
 
 
 def ping_search_engine(name: str, ping_url: str) -> None:
@@ -44,13 +44,13 @@ def main() -> None:
     print()
     print("Google Search Console:")
     print("  1. Go to https://search.google.com/search-console")
-    print("  2. Add property: https://stearmanparts.com")
+    print("  2. Add property: https://stearmanhq.com")
     print("  3. Verify ownership (DNS TXT record or HTML file)")
     print("  4. Submit sitemap: Sitemaps → Add → sitemap.xml")
     print()
     print("Bing Webmaster Tools:")
     print("  1. Go to https://www.bing.com/webmasters")
-    print("  2. Add site: https://stearmanparts.com")
+    print("  2. Add site: https://stearmanhq.com")
     print("  3. Verify ownership")
     print("  4. Submit sitemap: Sitemaps → Submit sitemap")
     print()

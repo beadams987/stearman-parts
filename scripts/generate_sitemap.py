@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate sitemap.xml for stearmanparts.com from Azure SQL data.
+"""Generate sitemap.xml for stearmanhq.com from Azure SQL data.
 
 Outputs to web/public/sitemap.xml for inclusion in the SWA build.
 
@@ -22,7 +22,7 @@ from xml.etree.ElementTree import Element, SubElement, ElementTree, indent
 
 import pyodbc
 
-BASE_URL = "https://stearmanparts.com"
+BASE_URL = "https://stearmanhq.com"
 TODAY = datetime.now(UTC).strftime("%Y-%m-%d")
 
 
