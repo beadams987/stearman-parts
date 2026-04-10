@@ -83,7 +83,8 @@ export default function ImageGrid({ images }: ImageGridProps) {
   if (images.length === 0) {
     return (
       <div className="text-center py-12 text-slate-500 dark:text-slate-400">
-        <p className="text-lg">No images in this folder.</p>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500 mx-auto mb-3"></div>
+        <p className="text-lg">Loading images…</p>
       </div>
     );
   }
