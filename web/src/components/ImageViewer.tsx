@@ -199,7 +199,7 @@ export default function ImageViewer({
               ref={imgRef}
               src={imageUrl}
               alt={fileName ?? 'Engineering drawing'}
-              crossOrigin="anonymous"
+              // crossOrigin removed — Azure Blob SAS URLs don't send CORS headers
               onLoad={() => setLoading(false)}
               onError={() => { setLoading(false); setError(true); }}
               className="select-none"
