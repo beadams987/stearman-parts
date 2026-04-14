@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-const SITE_NAME = 'Stearman Parts & Service Guide';
+const SITE_NAME = 'StearmanHQ';
 
 /**
  * Set the document title and optionally the meta description for the current page.
