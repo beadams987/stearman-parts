@@ -152,6 +152,7 @@ jobs:
         env:
           VITE_API_URL: ${{ vars.API_URL || 'https://func-stearman-api.azurewebsites.net/api' }}
           VITE_WORKOS_CLIENT_ID: ${{ vars.WORKOS_CLIENT_ID }}
+          VITE_APPINSIGHTS_CONNECTION_STRING: ${{ vars.VITE_APPINSIGHTS_CONNECTION_STRING }}
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4

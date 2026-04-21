@@ -8,7 +8,18 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
 from app.database import get_db
-from app.routers import bundles, deploy, events, folders, images, manuals, registry, search, submissions
+from app.routers import (
+    analytics,
+    bundles,
+    deploy,
+    events,
+    folders,
+    images,
+    manuals,
+    registry,
+    search,
+    submissions,
+)
 
 app = FastAPI(
     title="Stearman Parts API",
@@ -38,6 +49,7 @@ app.include_router(manuals.router)
 app.include_router(submissions.router)
 app.include_router(events.router)
 app.include_router(registry.router)
+app.include_router(analytics.router)
 
 
 # ── Health check ──────────────────────────────────────────────────────

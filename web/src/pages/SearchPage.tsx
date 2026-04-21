@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { usePageMeta } from '../hooks/usePageMeta.ts';
+import { useDwellTime } from '../hooks/useAnalytics.ts';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { Search, Layers, Image as ImageIcon, Filter, X } from 'lucide-react';
 import { useSearch, useFolders } from '../api/hooks.ts';
@@ -126,6 +127,7 @@ function ResultCard({ result, query }: { result: SearchResult; query: string }) 
 }
 
 export default function SearchPage() {
+  useDwellTime();
   const [searchParams, setSearchParams] = useSearchParams();
   const query = searchParams.get('q') ?? '';
   const type = searchParams.get('type') as 'drawing_number' | 'keyword' | 'ocr' | undefined;

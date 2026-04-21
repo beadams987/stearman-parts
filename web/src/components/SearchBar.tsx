@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, X } from 'lucide-react';
 import { useSearchSuggest } from '../api/hooks.ts';
+import { trackSearch } from '../hooks/useAnalytics.ts';
 
 interface SearchBarProps {
   compact?: boolean;
@@ -23,6 +24,7 @@ export default function SearchBar({ compact = false }: SearchBarProps) {
     (e?: React.FormEvent) => {
       e?.preventDefault();
       if (query.trim().length < 2) return;
+      trackSearch(query, searchType);
       const params = new URLSearchParams({ q: query.trim() });
       if (searchType !== 'all') {
         params.set('type', searchType);
@@ -38,6 +40,7 @@ export default function SearchBar({ compact = false }: SearchBarProps) {
       setQuery(value);
       setSearchType(type);
       setShowSuggestions(false);
+      trackSearch(value, `${type}_suggestion`);
       const params = new URLSearchParams({ q: value, type });
       navigate(`/search?${params.toString()}`);
     },

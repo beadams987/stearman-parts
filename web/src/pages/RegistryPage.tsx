@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Search, MapPin, Plane, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react';
 import { usePageMeta } from '../hooks/usePageMeta.ts';
+import { useDwellTime } from '../hooks/useAnalytics.ts';
 import apiClient from '../api/client.ts';
 
 interface RegistryEntry {
@@ -24,6 +25,7 @@ interface RegistryResponse {
 }
 
 export default function RegistryPage() {
+  useDwellTime();
   const [data, setData] = useState<RegistryResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');

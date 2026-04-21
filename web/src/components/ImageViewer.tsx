@@ -7,6 +7,7 @@ import {
   Download,
   RotateCw,
 } from 'lucide-react';
+import { trackDownload } from '../hooks/useAnalytics.ts';
 
 interface ImageViewerProps {
   imageUrl: string;
@@ -91,9 +92,12 @@ export default function ImageViewer({
   }, []);
 
   const handleDownload = useCallback(() => {
+    const name = fileName ?? 'image.tif';
+    const ext = name.split('.').pop()?.toLowerCase() ?? 'unknown';
+    trackDownload(name, ext);
     const link = document.createElement('a');
     link.href = downloadUrl || imageUrl;
-    link.download = fileName ?? 'image.tif';
+    link.download = name;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

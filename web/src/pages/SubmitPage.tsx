@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
 import { Upload, CheckCircle, AlertTriangle, FileText, Image as ImageIcon, Link, X } from 'lucide-react';
 import { usePageMeta } from '../hooks/usePageMeta.ts';
+import { useDwellTime } from '../hooks/useAnalytics.ts';
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
 const HCAPTCHA_SITE_KEY = import.meta.env.VITE_HCAPTCHA_SITE_KEY || '';
@@ -11,6 +12,7 @@ const ACCEPTED_TYPES = '.jpg,.jpeg,.png,.tif,.tiff,.gif,.webp,.pdf';
 type SubmitState = 'idle' | 'uploading' | 'success' | 'error';
 
 export default function SubmitPage() {
+  useDwellTime();
   const [state, setState] = useState<SubmitState>('idle');
   const [errorMsg, setErrorMsg] = useState('');
   const [file, setFile] = useState<File | null>(null);

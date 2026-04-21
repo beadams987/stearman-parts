@@ -3,6 +3,7 @@ import {
   Calendar, MapPin, ExternalLink, Filter, Plane, Clock, Globe,
 } from 'lucide-react';
 import { usePageMeta } from '../hooks/usePageMeta.ts';
+import { useDwellTime } from '../hooks/useAnalytics.ts';
 import apiClient from '../api/client.ts';
 
 interface Event {
@@ -57,6 +58,7 @@ function formatDateRange(start: string, end: string | null): string {
 }
 
 export default function EventsPage() {
+  useDwellTime();
   const [data, setData] = useState<EventsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeType, setActiveType] = useState<string | null>(null);

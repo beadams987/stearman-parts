@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { usePageMeta } from '../hooks/usePageMeta.ts';
+import { useDwellTime } from '../hooks/useAnalytics.ts';
 import { useEffect, useState } from 'react';
 import {
   Image as ImageIcon,
@@ -196,7 +197,7 @@ export default function HomePage() {
   const navigate = useNavigate();
   const { data: stats } = useStats();
 
-
+  useDwellTime();
   usePageMeta(
     'Home',
     'The Boeing-Stearman Information Hub — 7,673 engineering drawings, 36+ technical manuals, full-text search, and community submissions.',
