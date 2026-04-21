@@ -43,6 +43,10 @@ class Settings(BaseSettings):
     AZURE_RESOURCE_GROUP: str = ""
     AZURE_FUNCTION_APP_NAME: str = ""
 
+    # Application Insights (read-only API key + app id for analytics dashboard)
+    APPINSIGHTS_QUERY_KEY: str = ""
+    APPINSIGHTS_APP_ID: str = ""
+
     # Site
     SITE_BASE_URL: str = "https://stearmanhq.com"
 

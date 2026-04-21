@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@workos-inc/authkit-react';
 import {
   X, Home, FolderOpen, BookOpen, Upload, Search, Calendar, Plane,
-  LogIn, UserPlus, LogOut, Moon, Sun,
+  LogIn, UserPlus, LogOut, Moon, Sun, BarChart3,
 } from 'lucide-react';
 
 interface MobileNavProps {
@@ -21,6 +21,7 @@ const navItems = [
   { to: '/registry', icon: Plane, label: 'Owner Directory' },
   { to: '/submit', icon: Upload, label: 'Submit a Resource' },
   { to: '/search?q=', icon: Search, label: 'Search' },
+  { to: '/analytics', icon: BarChart3, label: 'Analytics' },
 ];
 
 export default function MobileNav({ open, onClose, darkMode, onToggleDarkMode }: MobileNavProps) {

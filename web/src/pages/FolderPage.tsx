@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { usePageMeta } from '../hooks/usePageMeta.ts';
+import { useDwellTime } from '../hooks/useAnalytics.ts';
 import { useParams, Link } from 'react-router-dom';
 import { ChevronRight, Home, Folder as FolderIcon } from 'lucide-react';
 import { useFolder, useFolders, useFolderImages } from '../api/hooks.ts';
 import ImageGrid from '../components/ImageGrid.tsx';
 
 export default function FolderPage() {
+  useDwellTime();
   const { id } = useParams<{ id: string }>();
   const folderId = id ? Number(id) : undefined;
   const [page, setPage] = useState(1);

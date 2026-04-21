@@ -1,9 +1,11 @@
 import { useParams, Link } from 'react-router-dom';
 import { ChevronRight, Home, ArrowLeft } from 'lucide-react';
 import { useBundle } from '../api/hooks.ts';
+import { useDwellTime } from '../hooks/useAnalytics.ts';
 import BundleViewer from '../components/BundleViewer.tsx';
 
 export default function BundlePage() {
+  useDwellTime();
   const { id } = useParams<{ id: string }>();
   const bundleId = id ? Number(id) : undefined;
 
